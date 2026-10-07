@@ -1,0 +1,14 @@
+item,value
+oil_exporters_used,BRL MXN COP
+oil_importers_used,KRW
+confirmed_shocks,19
+oil_confirmed_shocks,18
+oil_shock_dates,2024-09-19 2024-09-30 2024-12-30 2025-03-12 2025-04-20 2025-05-15 2025-06-01 2025-06-11 2025-06-12 2025-06-13 2025-06-17 2025-06-26 2025-07-25 2025-10-01 2026-01-13 2026-02-18 2026-02-27 2026-04-02
+brent_shock_days,16
+days_with_tilt_pm,132
+days_with_tilt_brent,108
+min3_confirmed_shocks,20
+min3_month_ends_escalation_z_ge_2,3
+primary_month_ends_escalation_z_ge_2,3
+min3_index_days,722
+primary_index_days,815

@@ -1,0 +1,60 @@
+# Mapping from the market-data delivery to internal series (src/data/market.py, DECISIONS D28).
+# Source: data/raw/market/priority1_market_data.csv (long date, ticker, field, value), built from
+# the Bloomberg terminal pull (FX, MSCI World TR, S&P 500 TR, DXY, Brent), WRDS/Cboe (VIX) and the
+# official 10-year yields (US Treasury, Bundesbank, Bank of England, MOF Japan).
+# Delivery README: data/raw/delivery/market/README.md. Course use only, do not redistribute.
+#
+# Spot: field `last` (Bloomberg PX_LAST, last mid). Forwards and NDFs: 1-month OUTRIGHTS delivered
+# as bid/ask only (spot + points / scale, scales checked by the data team); the mid is (bid+ask)/2.
+# invert: true for currencies quoted as units per USD.
+# fwd_valid_from: forward quotes before this date are discarded (Asian NDF points are erratic in
+#   2010, delivery README open point 2).
+# close: time of the Bloomberg daily close, inferred by the data team (not documented):
+#   ny = around the New York close (after the 16:00 London prediction-market snapshot);
+#   asia = Asian hours (before the snapshot, so a signal of day t can only trade at the close of t+1).
+
+defaults: {spot_field: last, bid_field: bid, ask_field: ask}
+
+fx:
+  EUR: {spot: EURUSD, fwd_outright: EURUSD_1M_FWD, close: ny}
+  GBP: {spot: GBPUSD, fwd_outright: GBPUSD_1M_FWD, close: ny}
+  AUD: {spot: AUDUSD, fwd_outright: AUDUSD_1M_FWD, close: ny}
+  NZD: {spot: NZDUSD, fwd_outright: NZDUSD_1M_FWD, close: ny}
+  JPY: {spot: USDJPY, fwd_outright: USDJPY_1M_FWD, invert: true, close: ny}
+  CHF: {spot: USDCHF, fwd_outright: USDCHF_1M_FWD, invert: true, close: ny}
+  CAD: {spot: USDCAD, fwd_outright: USDCAD_1M_FWD, invert: true, close: ny}
+  NOK: {spot: USDNOK, fwd_outright: USDNOK_1M_FWD, invert: true, close: ny}
+  SEK: {spot: USDSEK, fwd_outright: USDSEK_1M_FWD, invert: true, close: ny}
+  BRL: {spot: USDBRL, fwd_outright: USDBRL_1M_NDF, invert: true, close: ny}
+  MXN: {spot: USDMXN, fwd_outright: USDMXN_1M_DELIVERABLE, invert: true, close: ny}
+  COP: {spot: USDCOP, fwd_outright: USDCOP_1M_NDF, invert: true, close: ny}
+  CLP: {spot: USDCLP, fwd_outright: USDCLP_1M_NDF, invert: true, close: ny}
+  PEN: {spot: USDPEN, fwd_outright: USDPEN_1M_NDF, invert: true, close: ny}
+  ZAR: {spot: USDZAR, fwd_outright: USDZAR_1M_DELIVERABLE, invert: true, close: ny}
+  TRY: {spot: USDTRY, fwd_outright: USDTRY_1M_DELIVERABLE, invert: true, close: ny}
+  PLN: {spot: USDPLN, fwd_outright: USDPLN_1M_DELIVERABLE, invert: true, close: ny}
+  HUF: {spot: USDHUF, fwd_outright: USDHUF_1M_DELIVERABLE, invert: true, close: ny}
+  CZK: {spot: USDCZK, fwd_outright: USDCZK_1M_DELIVERABLE, invert: true, close: ny}
+  CNH: {spot: USDCNH, fwd_outright: USDCNH_1M_DELIVERABLE, invert: true, close: ny}
+  IDR: {spot: USDIDR, fwd_outright: USDIDR_1M_NDF, invert: true, close: asia, fwd_valid_from: "2011-01-01"}
+  INR: {spot: USDINR, fwd_outright: USDINR_1M_NDF, invert: true, close: asia, fwd_valid_from: "2011-01-01"}
+  KRW: {spot: USDKRW, fwd_outright: USDKRW_1M_NDF, invert: true, close: asia, fwd_valid_from: "2011-01-01"}
+  TWD: {spot: USDTWD, fwd_outright: USDTWD_1M_NDF, invert: true, close: asia, fwd_valid_from: "2011-01-01"}
+  THB: {spot: USDTHB, fwd_outright: USDTHB_1M_DELIVERABLE, invert: true, close: asia}
+  PHP: {spot: USDPHP, fwd_outright: USDPHP_1M_NDF, invert: true, close: asia, fwd_valid_from: "2011-01-01"}
+  MYR: {spot: USDMYR, fwd_outright: USDMYR_1M_NDF, invert: true, close: asia, fwd_valid_from: "2011-01-01"}
+
+# Official constant-maturity 10-year yields (percent): US Treasury par (about 15:30 New York),
+# Bundesbank Svensson zero-coupon (late morning Frankfurt), BoE VRP par (London), MOF JGB (15:00 Tokyo).
+y10:
+  US: {ticker: US10Y, field: last}
+  EA: {ticker: DE10Y, field: last}
+  UK: {ticker: GB10Y, field: last}
+  JP: {ticker: JP10Y, field: last}
+
+risk:
+  vix: {ticker: VIX, field: last}
+  brent: {ticker: BRENT1, field: last}
+  msci_world_tr: {ticker: MSCI_WORLD_TR, field: last}
+  spx_tr: {ticker: SP500_TR, field: last}
+  dxy: {ticker: DXY, field: last}

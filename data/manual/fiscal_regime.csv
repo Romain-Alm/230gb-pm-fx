@@ -1,0 +1,20 @@
+# Static fiscal information per zone (DECISIONS D15): debt_gdp_2024 feeds the debt differential
+# and yield_cap the robustness variant. The fiscal-dominance regime itself is time-varying
+# (yield-currency correlation, spec 6.4); the static fiscal_dominance column is NOT used by the
+# primary rules.
+# fiscal_dominance = 1 when a fiscal expansion is expected to weaken the currency (high debt
+# and/or capped yields: UK 2022, Japan 2025-26 in the course), 0 under monetary dominance
+# (fiscal expansion raises yields and the currency). Debt: IMF WEO general government gross debt,
+# % of GDP, 2024 (approximate, April 2025 vintage). DRAFT 2026-10-03, to confirm with the team
+# before any backtest.
+zone,debt_gdp_2024,yield_cap,fiscal_dominance,rationale
+US,121,0,1,"Debt above 120% of GDP and persistent deficits; term premium and USD reacted negatively to fiscal news in 2025"
+JP,237,1,1,"Highest debt in G10 and BoJ yield control (YCC to March 2024, large JGB purchases after); course example 2025-26"
+UK,101,0,1,"Debt near 100% of GDP; course example of fiscal dominance (September 2022 mini-budget)"
+EA,88,1,0,"Aggregate debt below 90%; ECB TPI backstop caps spreads, fiscal news moves sovereign spreads rather than EUR (course: spread adjusts)"
+CA,107,0,0,"Gross debt inflated by provincial and pension liabilities; net debt low; credible inflation targeting"
+AU,50,0,0,"Low debt, monetary dominance"
+NZ,47,0,0,"Low debt, monetary dominance"
+CH,38,0,0,"Low debt, monetary dominance"
+NO,43,0,0,"Low gross debt and large sovereign wealth fund"
+SE,33,0,0,"Low debt, monetary dominance"

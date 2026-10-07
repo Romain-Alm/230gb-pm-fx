@@ -1,0 +1,115 @@
+# Single configuration file for the replication package.
+# Every parameter used by the pipeline lives here. Values are fixed ex ante
+# (PROJECT_SPEC.md); any change is logged in DECISIONS.md with a date.
+
+seed: 230
+
+paths:
+  # Root of the Kairos data estate (read-only). Override with env KAIROS_DATA_ROOT.
+  kairos_data_root: "D:/haas-mfe-g9-cg/kairos-data"
+  # Relative to kairos_data_root
+  pm_trades_tape: "derived/backtest/probalytics/trades"
+  pm_trades_tape_live: "derived/backtest/probalytics_live/trades"
+  pm_markets_raw: "historical/probalytics/raw/markets/markets.parquet"
+  pm_markets_export: "historical/probalytics/raw_export_20260924/markets/markets.parquet"
+  kalshi_series_categories: "live/market-universe/metadata/kalshi_series_categories.json"
+  # Relative to the repository root
+  processed: "data/processed"
+  manual: "data/manual"
+  raw_market: "data/raw/market"
+  raw_market_qc: "data/raw/market_qc/priority1_qc_flags.csv"   # QC flags of the market delivery (D28)
+  raw_intraday: "data/raw/intraday"
+  market_series: "config/market_series.yaml"   # raw-data mapping (free-data runs use config/market_series_free.yaml)
+  results: "results"
+  figures: "results/figures"
+
+sample:
+  start: "2024-01-01"
+  train_end: "2025-12-31"
+  test_start: "2026-01-01"
+  # Last day of the frozen archive is 2026-07-21; the live tape extends it.
+  archive_end: "2026-07-21"
+  end: "2026-09-24"   # live tape is near-empty after 2026-09-24
+
+snapshot:
+  # Prediction-market snapshot. The market delivery has no 16:00 London fix (D28): G10, LatAm,
+  # CEE, ZAR and TRY close around the New York close, after this snapshot (a signal of day t trades
+  # at the close of t); Asian currencies close before it (one-day lag, `close: asia` in the mapping).
+  timezone: "Europe/London"
+  time: "16:00"
+  stale_hours: 6
+
+pm_inclusion:
+  min_volume_7d_usd: 50000
+  min_volume_7d_usd_grid: [10000, 50000, 250000]
+  min_days_to_resolution: 3
+  max_days_to_resolution: 365
+  min_prob: 0.03
+  max_prob: 0.97
+
+coverage:
+  min_share_days_covered_train: 0.60
+
+theme_index:
+  vol_ewma_span_days: 60
+  winsor_sd: 5.0
+  weighting: "volume"        # robustness: "equal"
+  bracket_open_bucket_distance: 1.0   # in the bucket's own units (pp or bp per 25bp step)
+  policy_horizon_months: 6   # constant-horizon interpolation (deferred, see DECISIONS.md)
+
+smoothing:
+  ewma_halflife_days: 5
+  ewma_halflife_grid: [1, 5, 10, 20]
+  geo_escalation_halflife_days: 20
+  geo_escalation_burnin_days: 60     # trading days before the first escalation signal (D16)
+  geo_shock_k: 2.0
+  geo_shock_k_grid: [1.5, 2.0, 2.5]
+  shock_persist_hours: 4
+  shock_min_volume_usd: 25000
+
+strategy_a:
+  vol_target_annual: 0.10
+  cov_ewma_span_days: 60
+  gross_leverage_cap: 3.0
+  single_pair_cap_share: 0.30
+  no_trade_band: 0.10
+  gate_abs_t: 3.0
+  pairs: ["EUR", "JPY", "GBP", "CHF", "AUD", "NZD", "CAD", "NOK", "SEK"]
+
+strategy_b:
+  vol_target_annual: 0.10
+  n_long: 3
+  n_short: 3
+  leg_rule: "tercile"        # D23: top tercile vs bottom tercile, floor(N/3), at least 1
+  vol_lookback_days: 60
+  escalation_z_cuts: [1.0, 2.0]
+  escalation_weights: [1.0, 0.5, 0.0]
+  exec_lag_days: "by_close"  # D28: 0 for New York closes, 1 for Asian closes (KRW in the primary universe)
+  shock_cut_level: 0.25
+  shock_cut_grid: [0.0, 0.25, 0.5]
+  rerisk_days: 10
+  rerisk_grid: [5, 10, 20]
+  # Added 2026-10-03 after the definitive results (scope-freeze lifting, D30, D31); not pre-registered.
+  oil_exporters: ["BRL", "MXN", "COP"]                 # spec 7.5
+  oil_importers: ["KRW", "INR", "THB", "TWD", "PHP"]   # spec 7.5
+  brent_shock_k: 2.0
+  min_events_robustness: 3
+
+weekend:
+  friday_close_ny: "17:00"
+  reopen_london: "07:00"      # robustness: Sunday 18:00 New York
+  reopen_alt_ny: "18:00"
+
+costs:
+  half_spread_median_days: 20   # D28: causal rolling median of the delivered bid/ask half-spread
+  g10_half_spread_bp: 2.0
+  em_half_spread_bp: 10.0
+  vix_stress_quantile: 0.90
+  vix_stress_multiplier: 2.0
+  sensitivity: [0.5, 1.0, 2.0, 3.0]
+
+market_qc:
+  # D28: observations removed before use (all fields of the flagged date and ticker). Flags are
+  # computed by the data team (delivery README, "QC flags"); other flags are kept as information.
+  blank_flags: ["last_outside_bid_ask", "isolated_spike", "wide_points_spread", "premium_sign_vs_datastream"]
+  keep_tickers: ["VIX", "BRENT1", "MSCI_WORLD_TR", "SP500_TR", "DXY"]   # risk-series spikes are genuine crisis days

@@ -1,0 +1,72 @@
+[
+ {
+  "date": "2024-07-13",
+  "label": "Assassination attempt on Trump",
+  "cells": [
+   "US/FISCAL_POLITICAL"
+  ]
+ },
+ {
+  "date": "2024-08-02",
+  "label": "Weak July payrolls",
+  "cells": [
+   "US/MONETARY"
+  ]
+ },
+ {
+  "date": "2024-10-01",
+  "label": "Iran missile attack on Israel",
+  "cells": [
+   "GLOBAL/GEOPOLITICS"
+  ]
+ },
+ {
+  "date": "2024-11-06",
+  "label": "US election",
+  "cells": [
+   "US/FISCAL_POLITICAL"
+  ]
+ },
+ {
+  "date": "2024-12-19",
+  "label": "Hawkish Fed cut",
+  "cells": [
+   "US/MONETARY"
+  ]
+ },
+ {
+  "date": "2025-04-02",
+  "label": "Liberation Day tariffs",
+  "cells": [
+   "GLOBAL/GEO_TRADE"
+  ]
+ },
+ {
+  "date": "2025-06-13",
+  "label": "Israel strikes Iran",
+  "cells": [
+   "GLOBAL/GEOPOLITICS"
+  ]
+ },
+ {
+  "date": "2025-06-22",
+  "label": "US strikes on Fordow",
+  "cells": [
+   "GLOBAL/GEOPOLITICS"
+  ]
+ },
+ {
+  "date": "2025-08-01",
+  "label": "Payroll revisions",
+  "cells": [
+   "US/MONETARY"
+  ]
+ },
+ {
+  "date": "2025-10-04",
+  "label": "Gaza deal; Takaichi wins LDP vote",
+  "cells": [
+   "GLOBAL/GEOPOLITICS"
+  ]
+ }
+]

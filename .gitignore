@@ -1,0 +1,18 @@
+# Environment and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+scratch/
+
+# Secrets (FRED API key and any other local credential)
+config/secrets*
+
+# Licensed raw data (Bloomberg delivery, Dukascopy, FRED, ECB, IRR file)
+data/raw/
+
+# Confidential, not distributed: prediction-market panels derived from the Probalytics data
+# (Kairos industry project) and the Kairos classification code. See README, "Data".
+data/processed/
+src/pm/vendor/

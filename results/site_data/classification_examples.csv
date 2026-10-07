@@ -1,0 +1,61 @@
+platform,title,theme,zones,direction,partition,unit,bucket_value,theme_rule,direction_rule
+polymarket,Will the Republican Party win the NJ-08 House seat?,FISCAL_POLITICAL,US,0,False,,,text:election,fiscal:none
+polymarket,Will Benny Gantz be the next Prime Minister of Israel?,FISCAL_POLITICAL,,0,False,,,text:prime minister,fiscal:none
+polymarket,Will the Centre Party (C) win seats in the 2026 Swedish parliamentary elections?,FISCAL_POLITICAL,SE,0,False,,,text:parliament,fiscal:none
+kalshi,Will Dave Joyce receive at least 56% of the popular vote in the 2026 OH-14 House election?,FISCAL_POLITICAL,US,0,False,,,text:election,fiscal:none
+kalshi,Will Paul Kagame leave office next in this set?,FISCAL_POLITICAL,,1,False,,,text:leave office,fiscal:up
+kalshi,"Will it be confirmed that U.S. Senator is an office previously held by the first person inaugurated as President for the term beginning January 20, 2029?",FISCAL_POLITICAL,US,0,False,,,text:President,fiscal:none
+kalshi,Will the total vote count for all participants in Maine 01 House General Election be above 440000?,FISCAL_POLITICAL,US,0,False,,,text:Election,fiscal:none
+polymarket,Will the Republican Party win the NC-06 House seat?,FISCAL_POLITICAL,US,0,False,,,text:election,fiscal:none
+kalshi,"Will the election be called before Nov 6, 2024 at 6pm EST on Nov 6, 2024?",FISCAL_POLITICAL,US,0,False,,,text:ELECTION,fiscal:none
+kalshi,Will more University presidents leave?,FISCAL_POLITICAL,US,1,False,,,text:President,fiscal:up
+polymarket,Will another candidate win the 2024 Romanian Presidential election?,FISCAL_POLITICAL,,0,False,,,text:president,fiscal:none
+polymarket,Will New Mexico be the tipping point state?,FISCAL_POLITICAL,US,0,False,,,text:election,fiscal:none
+polymarket,Will 25-49 ships transit the Strait of Hormuz between June 22-June 28?,GEOPOLITICS,GLOBAL,0,False,,,text:hormuz,geo:none
+polymarket,Will Hamas agree to disarm by March 31?,GEOPOLITICS,GLOBAL,0,False,,,text:Hamas,geo:none
+polymarket,"Russia x Ukraine ceasefire by January 31, 2026?",GEOPOLITICS,GLOBAL,-1,False,,,text:russia x ,geo:deescalate:ceasefire
+polymarket,"Trump announces a new drug boat strike by February 21, 2026?",GEOPOLITICS,GLOBAL|US,1,False,,,text:strike,geo:escalate:strike
+kalshi,"Will there be more than 25 transit calls through the Strait of Hormuz from Jun 15, 2026 to Jun 21, 2026?",GEOPOLITICS,GLOBAL,0,False,,,series:KXHORMUZWEEKLY,geo:none
+kalshi,"Will there be more than 20 transit calls through the Strait of Hormuz from Sep 14, 2026 to Sep 20, 2026?",GEOPOLITICS,GLOBAL,0,False,,,series:KXHORMUZWEEKLY,geo:none
+polymarket,Israel strikes Yemen by August 15?,GEOPOLITICS,GLOBAL,1,False,,,text:strikes,geo:escalate:strike
+polymarket,Will Israel strike Syria on July 23?,GEOPOLITICS,GLOBAL,1,False,,,text:strikes,geo:escalate:strike
+polymarket,Will Trump withdraw the U.S. from NATO in 2025?,GEOPOLITICS,GLOBAL|US,-1,False,,,text:nato,geo:deescalate:withdraw
+polymarket,US kicks trans members out of military before July? ,GEOPOLITICS,GLOBAL|US,0,False,,,text:military,geo:leadership
+polymarket,Will Gold close between $3600 and $3700 at the end of 2025?,GEOPOLITICS,GLOBAL,0,False,,,text:strikes,geo:none
+polymarket,Pakistan strikes Kabul by February 28?,GEOPOLITICS,GLOBAL,1,False,,,text:strikes,geo:escalate:strike
+polymarket,Will Core CPI MoM be 0.6% or more in August?,INFLATION,US,0,True,pp,0.65,text:cpi,partition-bucket
+polymarket,Will monthly inflation increase by 0.5% or more in March?,INFLATION,US,0,True,pp,0.55,text:inflation,partition-bucket
+kalshi,Will the United States Producer Price Index for final demand for June 2026 be above 8.0%?,INFLATION,US,1,False,,,text:PPI,inflation:above
+kalshi,How high will CPI get this year?,INFLATION,US,0,False,,,text:INFLATION,inflation:no-level
+kalshi,Argentina inflation in Feb 2024 above 300?,INFLATION,,1,False,,,text:INFLATION,inflation:above
+kalshi,CPI core year-over-year in Aug 2026?,INFLATION,US,0,False,,,text:inflation,inflation:none
+kalshi,CPI month-over-month in Apr 2026?,INFLATION,US,0,False,,,series:KXECONSTATCPI,inflation:none
+kalshi,Will Germany inflation rate YoY prel for May 2026 be above 2.5%?,INFLATION,EA,1,False,,,series:KXDECPIPREL,inflation:above
+kalshi,Will Headline be Exactly 0.0% AND Core be Exactly 0.2% for Jul 2026?,INFLATION,US,0,False,,,text:CPI,inflation:none
+kalshi,Will France inflation rate YoY prel for May 2026 be above 2.0%?,INFLATION,EA,1,False,,,series:KXFRCPIPREL,inflation:above
+kalshi,Will gas CPI rise more than 3% in February 2024?,INFLATION,US,1,False,,,text:CPI,inflation:above
+kalshi,CPI year-over-year in Jul 2026?,INFLATION,US,0,False,,,series:KXECONSTATCPIYOY,inflation:none
+kalshi,Will the Federal Reserve Hike rates by 0bps at their March 2025 meeting?,MONETARY,US,0,True,bp,0.0,series:KXFEDDECISION,partition-bucket
+kalshi,Will the Bank of Israel Maintain current rate at the Monetary Committee meeting?,MONETARY,,0,True,bp,0.0,text:interest rate,partition-bucket
+kalshi,"Will the upper bound of the federal funds rate be above 3.50% following the Fed's Apr 28, 2027 meeting?",MONETARY,US,1,False,,,series:KXFED,monetary:rate-above
+kalshi,Will the Federal Reserve Hike rates by 25bps at their July 2024 meeting?,MONETARY,US,0,True,bp,25.0,series:FEDDECISION,partition-bucket
+kalshi,"Will the upper bound of the federal funds rate be above 0.00% following the Fed's Apr 28, 2027 meeting?",MONETARY,US,1,False,,,series:KXFED,monetary:rate-above
+kalshi,"Will the upper bound of the federal funds rate be above 0.50% following the Fed's Dec 8, 2027 meeting?",MONETARY,US,1,False,,,series:KXFED,monetary:rate-above
+kalshi,"Will the upper bound of the federal funds rate be above 5.00% following the Fed's Sep 16, 2026 meeting?",MONETARY,US,1,False,,,series:KXFED,monetary:rate-above
+polymarket,Will the Fed’s lower bound reach 3.0% or lower before 2027?,MONETARY,US,-1,False,,,text:fed,monetary:cut
+kalshi,Will the Fed cut rates 8 times?,MONETARY,US,0,True,bp,-200.0,series:RATECUTCOUNT,partition-bucket
+kalshi,Will the Bank of Korea Cut 1-25bps at the February Bank of Korea Monetary Policy Board meeting?,MONETARY,KR,0,True,bp,-25.0,series:KXCBDECISIONKOREA,partition-bucket
+kalshi,Will the European Central Bank Cut 1-25bps at the April ECB Governing Council monetary policy meeting?,MONETARY,EA,0,True,bp,-25.0,series:KXCBDECISIONEU,partition-bucket
+polymarket,Will Christopher Waller dissent the next Fed Decision?,MONETARY,US,0,False,,,text:fed,monetary:personnel-or-meta
+kalshi,"Will the tariff rate on India imports be between 40% and 49.99% on Jul 1, 2026?",TRADE_TARIFFS,US|IN,0,True,pct,44.995000000000005,series:KXTARIFFRATEINDIA,partition-bucket
+polymarket,Will Trump agree to a tariff agreement with Argentina in July?,TRADE_TARIFFS,US,-1,False,,,text:tariff,tariff:down:agreement
+polymarket,China-Vietnam trade deal before June?,TRADE_TARIFFS,US|CN,-1,False,,,text:trade deal,tariff:down:deal
+kalshi,between 54 to 54 members of the Senate vote for Cantwell-Grassley Trade Review Act of 2025?,TRADE_TARIFFS,US,0,True,pct,54.0,series:KXCONGRESSTARIFFCOUNT,partition-bucket
+polymarket,Will Trump agree to a tariff agreement with Israel by December 31?,TRADE_TARIFFS,US,-1,False,,,text:tariff,tariff:down:agreement
+kalshi,below 49 or below members of the Senate vote for Cantwell-Grassley Trade Review Act of 2025?,TRADE_TARIFFS,US,-1,False,,,series:KXCONGRESSTARIFFCOUNT,tariff:down:below
+kalshi,Will Trump impose tariffs on the Germany sector in the first 100 days?,TRADE_TARIFFS,EA|US,1,False,,,series:KXTARIFFCOUNTRY,tariff:up
+polymarket,Will Trump agree to a tariff agreement with Canada in September?,TRADE_TARIFFS,CA|US,-1,False,,,text:tariff,tariff:down:agreement
+kalshi,Will Trump impose tariffs in the first 48 hours?,TRADE_TARIFFS,US,1,False,,,series:KXFOREIGNTARIFF,tariff:up
+kalshi,Will Lisa Murkowski vote for a joint resolution terminating the national emergency declared to impose global tariffs?,TRADE_TARIFFS,US,1,False,,,series:KXSENATETARIFFVOTE,tariff:up
+polymarket,Will Trump’s Greenland Tariffs go into effect for France by Feburary 1?,TRADE_TARIFFS,EA|US,1,False,,,text:tariff,tariff:up
+kalshi,When will Trump announce a new trade deal?,TRADE_TARIFFS,US,-1,False,,,text:trade deal,tariff:down:deal

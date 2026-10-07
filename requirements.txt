@@ -1,0 +1,18 @@
+# Exact versions of the working environment (Python 3.13.13, Windows), restricted to the packages
+# the project imports, plus the runtime dependencies they need for this project.
+pandas==3.0.6
+numpy==2.5.3
+pyarrow==25.0.1        # parquet engine for pandas
+duckdb==1.5.6          # prediction-market tape queries
+pytz==2026.4           # needed by duckdb for timezone-aware results
+tzdata==2026.4         # time-zone database for pandas on Windows
+statsmodels==0.15.0
+linearmodels==7.0      # Driscoll-Kraay panel regressions
+scipy==1.18.1
+matplotlib==3.11.2
+PyYAML==6.0.3
+pytest==9.1.1
+# notebooks only
+nbformat==5.11.1
+nbclient==0.11.0
+ipykernel==7.4.0

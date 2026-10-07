@@ -1,0 +1,25 @@
+# Fiscal direction of election and leadership outcomes (spec 4.4: +1 = more expansionary
+# fiscal outcome or higher fiscal risk). Rows are checked in order; first match wins.
+# pattern: regex on the market title; context: regex on event text (slug words, series title, title).
+# sign 0 neutralises an outcome explicitly (ambiguous fiscal direction). Written 2026-10-03,
+# before any signal or backtest. Rationale gives the public source of the stance.
+label,pattern,context,sign,rationale
+us_2028_neutral,".",2028,0,"Outcome too far from the sample horizon to carry a fiscal signal"
+us_biden_exit_neutral,"biden.{0,40}(drop|out|finish|complete|withdraw)",".",0,"Biden exit had no clear fiscal sign (replacement candidate unknown)"
+us_trump_out_neutral,"trump.{0,40}(out|impeach|resign|leave|remov)",".",0,"Removal of an incumbent has no clear fiscal sign"
+us_sweep_r,"r prez.{0,5}r senate.{0,5}r house|republican sweep|republican trifecta",".",1,"Unified Republican control enables deficit-financed tax cuts (2025 reconciliation act; CBO scoring)"
+us_sweep_d,"d prez.{0,5}d senate.{0,5}d house|democratic sweep|democratic trifecta",".",-1,"Unified Democratic control: CRFB estimated smaller deficit increase than the Republican platform"
+us_mixed_power_neutral,"prez.{0,5}senate","balance of power|power",0,"Divided-government combinations have no clear fiscal sign"
+us_trump_2024,"trump|republican|\bgop\b","presidential election|presidency|inaugurated|popular vote|\bpres\b|2024 us|electoral",1,"CRFB 2024: Trump platform adds more to deficits than Harris platform (TCJA extension; tariffs)"
+us_harris_2024,"harris|kamala|democrat","presidential election|presidency|inaugurated|popular vote|\bpres\b|2024 us|electoral",-1,"CRFB 2024: Harris platform adds less to deficits than Trump platform"
+us_house_senate_r,"republican|\bgop\b|\br\b","control|house winner|senate winner|controlh|controls|majority|balance",1,"Republican control of a chamber supports extension of deficit-financed tax cuts"
+us_house_senate_d,"democrat|\bd\b","control|house winner|senate winner|controlh|controls|majority|balance",-1,"Democratic control of a chamber constrains deficit-financed tax cuts"
+fr_rn,"rassemblement national|national rally|\brn\b|le pen|bardella","france|french",1,"RN programme (2024): pension reform reversal and VAT cuts without offsetting measures; OAT-Bund spread widened on RN gains"
+fr_nfp,"nouveau front populaire|new popular front|\bnfp\b|m.lenchon|insoumise|\blfi\b|left.wing alliance","france|french",1,"NFP programme (2024): large spending increases; rated fiscally expansionary by Institut Montaigne"
+fr_ensemble,"(ensemble|renaissance|attal).{0,40}(win|most seats|majority)","france|french",-1,"Presidential camp committed to the deficit-reduction path agreed with the European Commission"
+uk_reform,"reform uk|farage","united kingdom|\buk\b|british|britain",1,"Reform UK 2024 manifesto: unfunded tax cuts (IFS assessment)"
+jp_takaichi_out,"takaichi.{0,40}(out|resign|leav|replac)|(out|resign|leav).{0,60}takaichi",".",-1,"Departure of the most expansionary LDP leader lowers expected fiscal expansion"
+jp_takaichi,"takaichi","japan|ldp|prime minister|japanese",1,"Takaichi: Abenomics-style fiscal expansion; JGB long-end sold off on her LDP win (Oct 2025)"
+jp_ishiba,"ishiba","japan|ldp|prime minister|japanese",-1,"Ishiba: fiscally orthodox; favoured fiscal consolidation"
+jp_koizumi,"koizumi","japan|ldp|prime minister|japanese",-1,"Koizumi: seen as more fiscally orthodox than Takaichi in the 2025 LDP race"
+de_debt_brake,"debt brake|schuldenbremse","german|germany|debtbrake",1,"Reform or suspension of the German debt brake allows larger deficits (March 2025 package)"

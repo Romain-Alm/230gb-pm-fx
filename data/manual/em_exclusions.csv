@@ -1,0 +1,24 @@
+# EM universe screen for Strategy B (spec 7.2, DECISIONS D23). Ilzetzki-Reinhart-Rogoff de facto fine
+# classification, file ERA_Classification_Monthly_1940-2019.xlsx (www.ilzetzki.com/irr-data), latest
+# non-missing month. exclude: primary rule (keep fine codes 12 and 13 only).
+# exclude_variant_coarse12: variant keeping codes 9 to 13. exclude_previous: universe used before D23.
+# Limitation: the 2019 vintage does not see regime changes after 2019 (no manual reclassification).
+ccy,irr_fine_code,irr_month,irr_coarse,irr_label,exclude,exclude_variant_coarse12,exclude_previous
+BRL,12.0,2019M12,3.0,managed floating,0,0,0
+MXN,13.0,2019M12,4.0,freely floating,0,0,0
+COP,12.0,2019M12,3.0,managed floating,0,0,0
+CLP,12.0,2019M12,3.0,managed floating,0,0,0
+PEN,8.0,2019M12,2.0,de facto crawling band <= 2%,1,1,0
+ZAR,13.0,2019M12,4.0,freely floating,0,0,0
+TRY,14.0,2019M5,5.0,freely falling,1,1,0
+PLN,11.0,2019M12,3.0,moving band <= 2%,1,0,0
+HUF,8.0,2019M12,2.0,de facto crawling band <= 2%,1,1,0
+CZK,4.0,2019M12,1.0,de facto peg,1,1,0
+IDR,8.0,2019M12,2.0,de facto crawling band <= 2%,1,1,0
+INR,11.0,2019M12,3.0,moving band <= 2%,1,0,0
+KRW,12.0,2019M12,3.0,managed floating,0,0,0
+TWD,,,,not in IRR database,1,1,0
+THB,11.0,2019M12,3.0,moving band <= 2%,1,0,0
+PHP,8.0,2019M12,2.0,de facto crawling band <= 2%,1,1,0
+MYR,11.0,2019M12,3.0,moving band <= 2%,1,0,0
+CNH,3.0,2019M12,1.0,pre-announced horizontal band <= 2%,1,1,1
