@@ -2,7 +2,7 @@
 
 Replication package for the final project of MFE 230GB (Currency Markets).
 
-**Presentation (October 8, 2026): [open the slides](https://raw.githack.com/Romain-Alm/230gb-pm-fx/main/presentation/index.html)**.
+**Presentation (October 8, 2026): [open the slides](https://htmlpreview.github.io/?https://github.com/Romain-Alm/230gb-pm-fx/blob/main/presentation/index.html)**.
 Arrow keys or space to move, `N` for speaker notes, `F` for full screen. Source:
 `presentation/index.html`; its numbers are read from `results/` and checked by
 `python3 presentation/build_piero_slides.py`.
