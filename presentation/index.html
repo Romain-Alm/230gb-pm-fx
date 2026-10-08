@@ -2,1102 +2,447 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Prediction Markets and Currency Strategies</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=JetBrains+Mono:wght@400;500;600;700&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=JetBrains+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: one 1920x1080 canvas scaled to fit the window. Each slide: mono eyebrow, sentence headline, body;
-   a ruled mono footer carries presenter, counter and navigation. Visual system of Piero's 230GA blueprint and
-   230ZB explainer: Archivo / Public Sans / JetBrains Mono, cool paper, white ruled panels.
-   The three data cells keep one color on every slide. Numbers in the text are filled by build_piero_slides.py. */
+/* One 1920x1080 canvas scaled to the window. One idea per slide: eyebrow, headline, one visual.
+   Visual system of the 230GA / 230ZB decks: Archivo, Public Sans, JetBrains Mono, cool paper. */
 :root{
-  --bg:#DADFE5; --paper:#F3F4F6; --surface:#FFFFFF; --surface-2:#F8F9FA;
-  --ink:#131B26; --muted:#546071; --faint:#858F9E; --rule:#D2D7DE;
-  --navy:#1F4F8B; --navy-soft:#DDE7F4;
-  --good:#2E7D3A; --good-soft:#E1F0E3; --bad:#B3362D; --bad-soft:#F7E0DD;
-  --c-mon:#2a78d6; --c-fis:#eb6834; --c-geo:#1baf7a;
-  --seq-0:#F1EFFA; --seq-1:#3B2E8F;
-  --noise:rgba(84,96,113,.10);
+  --bg:#DADFE5; --paper:#F3F4F6; --surface:#FFFFFF; --ink:#131B26; --muted:#546071; --faint:#8A94A3; --rule:#D5DAE1;
+  --navy:#1F4F8B; --navy-soft:#E3EBF6; --good:#2E7D3A; --good-soft:#E3F1E5; --bad:#B3362D; --bad-soft:#F8E3E0;
+  --c-mon:#2a78d6; --c-fis:#eb6834; --c-geo:#1baf7a; --gray:#C3CAD3;
   --display:"Archivo","Helvetica Neue",Arial,sans-serif;
   --sans:"Public Sans","Helvetica Neue",Arial,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    color-scheme:dark;
-    --bg:#070A0F; --paper:#0E131A; --surface:#1A222D; --surface-2:#161D27;
-    --ink:#E4E9F0; --muted:#A3AEBD; --faint:#768295; --rule:#2C3644;
-    --navy:#90B5E7; --navy-soft:#1B2A3F;
-    --good:#76C788; --good-soft:#163020; --bad:#EF8A80; --bad-soft:#3A1D1A;
-    --c-mon:#3987e5; --c-fis:#d95926; --c-geo:#199e70;
-    --seq-0:#1C2130; --seq-1:#B4A8F4;
-    --noise:rgba(163,174,189,.12);
-  }
-}
-:root[data-theme="dark"]{
-  color-scheme:dark;
-  --bg:#070A0F; --paper:#0E131A; --surface:#1A222D; --surface-2:#161D27;
-  --ink:#E4E9F0; --muted:#A3AEBD; --faint:#768295; --rule:#2C3644;
-  --navy:#90B5E7; --navy-soft:#1B2A3F;
-  --good:#76C788; --good-soft:#163020; --bad:#EF8A80; --bad-soft:#3A1D1A;
-  --c-mon:#3987e5; --c-fis:#d95926; --c-geo:#199e70;
-  --seq-0:#1C2130; --seq-1:#B4A8F4;
-  --noise:rgba(163,174,189,.12);
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
 }
 *{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:20px/1.45 var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
-p,h1,h2,h3,figure,dl,dd,ol,ul{margin:0}
-ol,ul{padding:0;list-style:none}
-button{font:inherit;color:inherit}
-b,strong{font-weight:700}
-:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
-
-/* ---------- stage, slide frame, footer ---------- */
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:26px/1.45 var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
 #stage{position:fixed;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;background:var(--paper);overflow:hidden}
-.progress{position:absolute;left:0;top:0;right:0;height:4px;z-index:3}
-.progress i{display:block;height:100%;width:0;background:var(--navy);transition:width .3s}
-.slide{position:absolute;left:0;top:0;width:1920px;height:1024px;padding:46px 72px 26px;display:flex;flex-direction:column;gap:26px;
-  visibility:hidden;opacity:0;transition:opacity .25s,visibility 0s .25s}
-.slide.on{visibility:visible;opacity:1;transition:opacity .25s}
-.notes{display:none}
-.hd{display:grid;gap:12px}
-.eyebrow{font:600 15px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.hd h2{font:800 46px/1.08 var(--display);font-stretch:106%;letter-spacing:-.012em;text-wrap:balance;max-width:1700px}
-.deck-foot{position:absolute;left:0;right:0;bottom:0;height:56px;padding:0 72px;display:flex;align-items:center;gap:28px;
-  border-top:1px solid var(--rule);font:500 14px/1 var(--mono);color:var(--faint)}
-.deck-foot .brand b{font:800 15px/1 var(--display);font-stretch:112%;color:var(--ink);margin-right:10px}
-.deck-foot .who{color:var(--muted)}
-.deck-foot .nav{margin-left:auto;display:flex;align-items:center;gap:10px}
-.deck-foot kbd{font:600 12px/1 var(--mono);border:1px solid var(--rule);border-radius:4px;padding:4px 6px;color:var(--muted);background:var(--surface)}
-.nbtn{width:34px;height:30px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);cursor:pointer;color:var(--muted);font:600 16px/1 var(--mono)}
-.nbtn:hover{color:var(--ink);border-color:var(--faint)}
-.deck-foot .count{color:var(--ink);font-weight:600;min-width:64px;text-align:center}
-
-/* ---------- shared pieces ---------- */
-.panel{background:var(--surface);border:1px solid var(--rule);border-radius:10px}
-.ct{font:700 21px/1.25 var(--display);color:var(--ink)}
-.fnote{font-size:14px;line-height:1.45;color:var(--muted)}
-.lab{font:600 13px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.lg{display:flex;flex-wrap:wrap;gap:6px 20px;font:500 14px/1.3 var(--mono);color:var(--muted)}
-.lg span{display:inline-flex;align-items:center;gap:7px}
-.sw{display:inline-block;width:12px;height:12px;border-radius:3px;flex:none;background:var(--c)}
-.mon{--c:var(--c-mon)} .fis{--c:var(--c-fis)} .geo{--c:var(--c-geo)}
-.lnk{display:inline-block;width:24px;height:0;border-top:3px solid var(--c,var(--muted));flex:none}
-.lnk.dash{border-top-style:dashed;--c:var(--muted)}
-.seg{display:inline-flex;border:1px solid var(--rule);border-radius:7px;overflow:hidden;background:var(--surface)}
-.seg button{font:500 14px/1.2 var(--mono);background:transparent;color:var(--muted);border:0;padding:8px 13px;cursor:pointer;white-space:nowrap}
+.bar{position:absolute;left:0;top:0;height:5px;background:var(--navy);transition:width .3s}
+.slide{position:absolute;inset:0 0 64px 0;padding:72px 110px 40px;display:flex;flex-direction:column;gap:44px;visibility:hidden;opacity:0;transition:opacity .25s}
+.slide.on{visibility:visible;opacity:1}
+.eyebrow{font:600 18px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h2{font:800 58px/1.1 var(--display);font-stretch:106%;letter-spacing:-.01em;max-width:1640px;text-wrap:balance;margin-top:16px}
+.foot{position:absolute;left:0;right:0;bottom:0;height:64px;padding:0 110px;display:flex;align-items:center;gap:24px;border-top:1px solid var(--rule);font:500 17px/1 var(--mono);color:var(--faint)}
+.foot b{font:800 18px/1 var(--display);color:var(--ink)}
+.foot .nav{margin-left:auto;display:flex;gap:10px;align-items:center}
+.foot .nav button{width:40px;height:34px;border:1px solid var(--rule);border-radius:6px;background:var(--surface);color:var(--muted)}
+.foot .count{min-width:70px;text-align:center;color:var(--ink);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:10px 18px;font:500 18px/1.2 var(--mono);color:var(--muted);white-space:nowrap}
 .seg button+button{border-left:1px solid var(--rule)}
-.seg button:hover{color:var(--ink)}
-.seg button[aria-pressed="true"]{background:var(--navy-soft);color:var(--navy);font-weight:700}
-input[type=range]{accent-color:var(--navy);width:100%;margin:0;cursor:pointer}
-.chart{width:100%;min-height:0}
-.chart .nolib{font:500 14px var(--mono);color:var(--muted);padding:20px}
-.tip{position:fixed;z-index:40;pointer-events:none;max-width:380px;background:var(--surface);border:1px solid var(--rule);border-radius:6px;
-  padding:8px 11px;font:13px/1.5 var(--mono);color:var(--ink);box-shadow:0 4px 14px rgba(0,0,0,.14);white-space:pre-line}
-.fk-lines{width:100%;height:100%;overflow:visible}
-.fk-lines path{fill:none;stroke:var(--faint);stroke-width:2;vector-effect:non-scaling-stroke;transition:stroke .2s}
+.seg button[aria-pressed="true"]{background:var(--navy-soft);color:var(--navy);font-weight:600}
+.tag{display:inline-flex;align-items:center;gap:10px;font:600 18px/1 var(--mono);color:var(--navy);letter-spacing:.04em}
+.small{font-size:21px;color:var(--muted);line-height:1.45}
+svg text{font-family:var(--mono)}
 
-/* ---------- slide 1 ---------- */
-.s1 .hd{gap:14px}
-.s1 h1{font:900 82px/1 var(--display);font-stretch:116%;letter-spacing:-.02em}
-.s1 .sub{font:700 31px/1.25 var(--display);color:var(--navy);max-width:1600px}
-.s1 .team{font:500 16px/1.5 var(--mono);color:var(--muted)}
-.s1 .team b{color:var(--ink);font-weight:600}
-.s1-body{flex:1;min-height:0;display:grid;grid-template-columns:55fr 45fr;gap:44px}
-.s1-left{display:flex;flex-direction:column;justify-content:space-between;gap:26px;min-width:0}
-.fork-wrap{display:grid;gap:14px}
-.why{display:grid;gap:18px}
-.why > div{display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:baseline;padding-bottom:18px;border-bottom:1px solid var(--rule)}
-.why .k{font:800 28px/1 var(--display);font-stretch:108%;color:var(--navy)}
-.why p{font-size:21px;line-height:1.42}
-.fork{display:grid;grid-template-columns:200px 64px 1fr;grid-template-rows:auto auto;row-gap:14px;align-items:center}
-.fk-root{grid-row:1/3;font:800 22px/1.2 var(--display);border:1.5px solid var(--ink);border-radius:10px;background:var(--surface);padding:18px;text-align:center}
-.fork .fk-lines{grid-row:1/3;grid-column:2}
-.fk-br{grid-column:3;display:grid;grid-template-columns:136px 28px 1fr;align-items:center;text-align:left;border:1px solid var(--rule);border-radius:10px;
-  background:var(--surface);padding:13px 18px;cursor:pointer;transition:border-color .2s,background .2s}
-.fk-br:hover{border-color:var(--faint)}
-.fk-when{font:800 21px/1.2 var(--display)}
-.fk-arr{color:var(--faint);font:600 18px/1 var(--mono)}
-.fk-res{font-size:19px;line-height:1.35}
-.fk-br[aria-pressed="true"]{border:2px solid var(--navy);background:var(--navy-soft);padding:12px 17px}
-.fork[data-sel="1"] .fk-lines path:nth-child(1),.fork[data-sel="2"] .fk-lines path:nth-child(2){stroke:var(--navy);stroke-width:4}
-.fk-cap{font:700 20px/1.3 var(--display);padding-left:264px}
-.s1-chart{display:flex;flex-direction:column;gap:10px;padding:20px 22px 16px;min-width:0}
-.s1-chart .chart{flex:1}
+/* 1. title */
+.s1{justify-content:center;gap:0}
+.s1 h1{font:900 104px/1.02 var(--display);font-stretch:112%;letter-spacing:-.02em;max-width:1500px}
+.s1 .q{font:600 40px/1.3 var(--display);color:var(--navy);margin-top:30px}
+.s1 .why{display:grid;grid-template-columns:repeat(3,1fr);gap:56px;margin-top:84px;max-width:1640px}
+.s1 .why div{border-top:2px solid var(--ink);padding-top:20px}
+.s1 .why b{display:block;font:800 30px/1.2 var(--display);margin-bottom:10px}
+.s1 .why p{font-size:25px;color:var(--muted)}
+.s1 .team{margin-top:84px;font:500 21px/1.5 var(--mono);color:var(--muted)}
 
-/* ---------- slide 2 ---------- */
-.cards3{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.mech{display:flex;flex-direction:column;gap:16px;padding:22px 26px 20px;min-width:0;transition:border-color .2s,box-shadow .2s}
-.mech:has(.stag:hover){border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
-.mech .mk{font:600 13px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
-.mech h3{font:800 27px/1.15 var(--display);font-stretch:104%;margin-top:-6px}
-.diag{background:var(--surface-2);border:1px solid var(--rule);border-radius:8px;padding:18px;height:272px;display:flex;flex-direction:column;justify-content:center;gap:12px}
-.fxl{font:600 23px/1.2 var(--mono);text-align:center;color:var(--ink)}
-.fxl small{display:block;font:500 13px/1.4 var(--sans);color:var(--muted);margin-top:4px}
-.uip{display:grid;gap:10px}
-.uip-row{display:grid;grid-template-columns:84px 1fr 118px;gap:10px;align-items:center}
-.uip-row .l{font:600 12px/1.2 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.ubars{display:grid;gap:4px}
-.ubars i,.ubars span{display:block;height:12px;border-radius:2px}
-.ubars .gap{background:var(--navy)}
-.ubars .split{display:flex;gap:2px}
-.ubars .dep{background:var(--faint);height:12px;border-radius:2px}
-.ubars .prem{flex:1;height:12px;border-radius:2px;border:1.5px solid var(--navy);background:repeating-linear-gradient(135deg,var(--navy) 0 2px,transparent 2px 6px)}
-.uip-row .res{font-size:14.5px;line-height:1.25;color:var(--ink)}
-.uip-key{display:flex;gap:14px;font:500 12px var(--mono);color:var(--muted)}
-.uip-key span{display:inline-flex;align-items:center;gap:6px}
-.uip-key i{width:14px;height:10px;border-radius:2px;display:inline-block}
-.diag .seg{align-self:center}
-.chain{display:grid;grid-template-columns:1fr 20px 1fr 20px 1fr 20px 1fr;align-items:stretch}
-.cb{border:1px solid var(--rule);border-radius:7px;background:var(--surface);padding:8px 6px;font:600 14.5px/1.25 var(--sans);text-align:center;
-  display:flex;align-items:center;justify-content:center;min-height:76px}
-.chain > i{font:600 15px/1 var(--mono);font-style:normal;color:var(--faint);display:flex;align-items:center;justify-content:center}
-.cb.end{font:800 19px/1.1 var(--display)}
-.chain[data-regime="m"] .cb.end{background:var(--good-soft);border-color:var(--good)}
-.chain[data-regime="f"] .cb.end{background:var(--bad-soft);border-color:var(--bad)}
-.cb.anim{animation:flip .44s ease}
-@keyframes flip{0%{transform:rotateX(0)}50%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
-.sig{font-size:14px;line-height:1.4;color:var(--muted)}
-.tot{display:grid;grid-template-columns:104px 48px 1fr;grid-template-rows:auto auto;row-gap:12px;align-items:center}
-.tot-src{grid-row:1/3;font:800 24px/1 var(--display);border:1.5px solid var(--ink);border-radius:8px;background:var(--surface);padding:20px 10px;text-align:center}
-.tot .fk-lines{grid-row:1/3;grid-column:2}
-.tot-out{grid-column:3;border:1px solid;border-radius:8px;padding:10px 14px;display:grid;gap:4px}
-.tot-out b{font:800 19px/1.1 var(--display)}
-.tot-out span{font:600 14px/1.3 var(--mono);color:var(--ink)}
-.tot-out.up{background:var(--good-soft);border-color:var(--good)}
-.tot-out.dn{background:var(--bad-soft);border-color:var(--bad)}
-.mrows{display:grid;gap:12px}
-.mrows dt{font:600 13px/1.2 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.mrows dd{font-size:19.5px;line-height:1.42;margin-top:-4px}
-.used{margin-top:auto;display:flex;align-items:center;gap:12px;padding-top:14px;border-top:1px solid var(--rule)}
-.stag{display:inline-flex;align-items:center;gap:7px;font:700 16px/1 var(--mono);border:1px solid var(--rule);border-radius:999px;padding:8px 14px;background:var(--surface);transition:background .2s,border-color .2s}
-.stag:hover{background:var(--navy-soft);border-color:var(--navy)}
-.used .note{font-size:15px;color:var(--muted)}
-.strip{font-size:16px;color:var(--muted);border-top:1px solid var(--rule);padding-top:14px}
-.strip b{color:var(--ink)}
+/* 2. course */
+.cards{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:36px;min-height:0}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:36px 36px 30px;display:flex;flex-direction:column;gap:24px}
+.card h3{font:800 32px/1.15 var(--display)}
+.card .vis{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px}
+.card .say{font-size:24px;line-height:1.4}
+.card .use{margin-top:auto;padding-top:18px;border-top:1px solid var(--rule)}
+.formula{font:600 40px/1 var(--mono);text-align:center}
+.defs{font:400 19px/1.5 var(--mono);color:var(--muted);text-align:center}
+.chain{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font:600 25px/1.2 var(--sans)}
+.chain span{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:10px 14px}
+.chain i{font-style:normal;color:var(--faint)}
+.chain .up{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.chain .dn{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.center{display:flex;justify-content:center}
+.vchain{display:flex;flex-direction:column;align-items:center;gap:8px;font:600 25px/1.2 var(--sans)}
+.vchain span{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:10px 18px}
+.vchain i{font-style:normal;color:var(--faint);font-size:22px;line-height:1}
+.vchain .up{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.vchain .dn{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
 
-/* ---------- slide 3 ---------- */
-.s3-body{flex:1;min-height:0;display:grid;grid-template-rows:auto auto 1fr;gap:18px}
-.funnel{display:grid;grid-template-columns:1fr 440px;gap:30px;align-items:center;padding:14px 22px}
-.fn-rows{display:grid;gap:6px}
-.fr{display:flex;align-items:center;gap:12px;font-size:17px;line-height:1.2;cursor:default}
-.fr .bar{height:22px;background:var(--navy);border-radius:2px 4px 4px 2px;min-width:3px}
-.fr .chips3{display:flex;gap:4px}
-.fr .chips3 i{width:22px;height:22px;border-radius:4px;background:var(--c)}
-.fr b{font-variant-numeric:tabular-nums}
-.fn-side{font-size:15.5px;line-height:1.5;color:var(--muted);border-left:1px solid var(--rule);padding-left:24px}
-.fn-side b{color:var(--ink)}
-.pipe{display:grid;grid-template-columns:repeat(5,1fr);gap:34px}
-.pipe li{position:relative;display:flex}
-.pipe li + li::before{content:"\2192";position:absolute;left:-27px;top:50%;transform:translateY(-50%);font:600 20px/1 var(--mono);color:var(--faint)}
-.pipe button{flex:1;display:grid;align-content:start;gap:6px;text-align:left;background:var(--surface);border:1px solid var(--rule);border-radius:10px;
-  padding:13px 16px;cursor:pointer;transition:border-color .2s,background .2s}
-.pipe button:hover{border-color:var(--faint)}
-.pipe button[aria-selected="true"]{border:2px solid var(--navy);background:var(--navy-soft);padding:12px 15px}
-.pipe .n{font:800 13px/1 var(--mono);color:var(--navy);letter-spacing:.06em}
-.pipe b{font:800 21px/1.1 var(--display)}
-.pipe .rule{font-size:15px;line-height:1.36;color:var(--muted)}
-.pipe button[aria-selected="true"] .rule{color:var(--ink)}
-.detail{padding:16px 24px 18px;display:flex;flex-direction:column;gap:12px;min-height:0}
-.dp-head{display:flex;align-items:center;gap:14px}
-.dp-head .stepnav{margin-left:auto;display:flex;gap:8px;align-items:center}
-.dp{flex:1;min-height:0}
-.dp[hidden]{display:none!important}
-#dp-1,#dp-2{display:flex;flex-direction:column;justify-content:center}
-.exl{display:grid;gap:12px;align-content:start}
-.ex{display:grid;grid-template-columns:1fr 30px 560px;align-items:center;gap:14px;padding:13px 18px;border:1px solid var(--rule);border-radius:8px;background:var(--surface-2)}
-.ex q{font-size:18px;line-height:1.35}
-.ex .to{color:var(--faint);font:600 18px/1 var(--mono);text-align:center}
-.ex .tags{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.tg{font:600 14px/1 var(--mono);border:1px solid var(--rule);border-radius:999px;padding:6px 10px;background:var(--surface);white-space:nowrap}
-.tg.x{border-style:dashed;color:var(--muted)}
-.ex .rl{flex-basis:100%;font:500 12px/1.2 var(--mono);color:var(--faint)}
-.dp-note{font-size:16px;color:var(--muted);margin-top:12px}
-.tl svg{display:block;width:100%;height:auto}
-.tl text{font-family:var(--mono);font-size:15px;fill:var(--muted)}
-.tl .strong{fill:var(--ink);font-weight:700;font-family:var(--sans);font-size:16px}
-.tl .axis{stroke:var(--muted);stroke-width:1.5}
-.tl .tick{stroke:var(--muted);stroke-width:1.2}
-.tl .bt{fill:var(--navy-soft);stroke:var(--navy);stroke-width:1.2}
-.tl .bt1{fill:var(--surface-2);stroke:var(--faint);stroke-width:1.2}
-.tl .snap{stroke:var(--navy);stroke-width:3}
-.tl .ny{stroke:var(--ink);stroke-width:2;stroke-dasharray:6 4}
-.tl .br{fill:none;stroke:var(--muted);stroke-width:1.5}
-.tl .ah{fill:var(--ink)}
-.tl .say{font:700 19px/1.35 var(--display);color:var(--ink);margin-top:8px}
-.hz{display:grid;grid-template-columns:560px 1fr 1fr;gap:26px;min-height:0}
-.hz-text{display:flex;flex-direction:column;gap:12px;min-width:0}
-.hz-l{display:flex;justify-content:space-between;align-items:baseline;font-size:16px;font-weight:600}
-.hz-l output{font:700 19px var(--mono);color:var(--navy)}
-.hz-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.hz-nums div{border:1px solid var(--rule);border-radius:7px;background:var(--surface-2);padding:8px 10px}
-.hz-nums dt{font:600 11.5px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
-.hz-nums dd{font:700 17px/1.3 var(--sans);margin-top:4px;font-variant-numeric:tabular-nums}
-.hz-read{font-size:15.5px;line-height:1.45}
-.hz-chart{display:flex;flex-direction:column;gap:4px;min-width:0;min-height:0}
-.hz-chart .chart{flex:1}
-.ct2{font:700 17px/1.2 var(--display)}
-.fx-step{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
-.formula{font:600 38px/1.3 var(--mono);color:var(--ink);text-align:center;padding:26px 18px;border:1px solid var(--rule);border-radius:10px;background:var(--surface-2)}
-.formula sub{font-size:.55em}
-.terms{display:grid;gap:9px}
-.terms li{display:grid;grid-template-columns:150px 1fr;gap:14px;font-size:17px;line-height:1.35;align-items:baseline}
-.terms li b{font:600 16px var(--mono);color:var(--navy)}
-.terms li b sub{font-size:.7em}
-.fx-say{font:700 20px/1.35 var(--display);margin-top:16px;text-align:center}
+/* 3. pipeline */
+.funnel{display:flex;align-items:baseline;gap:22px;font:500 24px/1 var(--mono);color:var(--muted)}
+.funnel b{font:800 44px/1 var(--display);color:var(--ink);margin-right:8px}
+.funnel i{font-style:normal;color:var(--faint)}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:20px}
+.step{text-align:left;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:22px 24px}
+.step .n{font:600 18px/1 var(--mono);color:var(--faint)}
+.step .t{display:block;font:800 30px/1.2 var(--display);margin-top:10px}
+.step[aria-pressed="true"]{border:2px solid var(--navy);background:var(--navy-soft);padding:21px 23px}
+.step[aria-pressed="true"] .n{color:var(--navy)}
+.detail{flex:1;background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:36px 44px;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;min-height:0}
+.detail .txt{font-size:30px;line-height:1.4}
+.detail .ex{margin-top:20px;font:500 22px/1.5 var(--mono);color:var(--muted)}
+.detail .ex b{color:var(--ink)}
+.hz{display:grid;gap:14px}
+.hz .row{display:flex;align-items:center;gap:18px;font:500 20px/1 var(--mono);color:var(--muted)}
+.hz input{flex:1;accent-color:var(--navy)}
 
-/* ---------- slide 4 ---------- */
-.s4-body{flex:1;min-height:0;display:grid;grid-template-columns:62fr 38fr;gap:30px}
-.heat{display:flex;flex-direction:column;gap:8px;padding:18px 22px 12px;min-width:0}
-.heat .chart{flex:1}
-.hlegend{display:flex;align-items:center;gap:10px;font:500 13px/1 var(--mono);color:var(--muted)}
-.hlegend .ramp{width:170px;height:10px;border-radius:2px;background:linear-gradient(90deg,var(--seq-0),var(--seq-1));border:1px solid var(--rule)}
-.s4-right{display:flex;flex-direction:column;gap:18px;min-width:0}
-.ctl{padding:18px 22px;display:grid;gap:12px}
-.ctl label{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:16px;font-weight:600}
-.ctl output{font:700 20px/1 var(--mono);color:var(--navy)}
-.ctl-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:16px;font-weight:600}
-.counter{display:flex;align-items:baseline;gap:12px;font-size:19px;font-weight:600;border-top:1px solid var(--rule);padding-top:12px}
-.counter b{font:900 46px/1 var(--display);font-stretch:112%}
-.passlist{font:500 13px/1.5 var(--mono);color:var(--muted);margin-top:-6px}
-.same{font-size:15px}
-.cnote{font-size:13.5px;color:var(--muted)}
-.tblocks{display:grid;gap:14px}
-.tblocks h3{font:800 19px/1.2 var(--display);margin-bottom:3px}
-.tblocks p{font-size:16.5px;line-height:1.42}
+/* 4. coverage */
+.cov{flex:1;display:grid;grid-template-columns:1.35fr 1fr;gap:64px;min-height:0}
+.cov .side{display:flex;flex-direction:column;justify-content:center;gap:36px}
+.cov .count{font:800 120px/1 var(--display);color:var(--navy)}
+.cov .count small{display:block;font:500 22px/1.3 var(--mono);color:var(--muted);margin-top:8px}
+.cov .gate{display:grid;gap:12px;font:500 21px/1.2 var(--mono);color:var(--muted)}
+.cov .gate input{accent-color:var(--navy)}
+.cov .pts{display:grid;gap:18px;font-size:24px}
+.cov .pts b{font-weight:700}
 
-/* ---------- slide 5 ---------- */
-.s5-body{flex:1;min-height:0;display:grid;grid-template-rows:1fr auto;gap:18px}
-.p3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;min-height:0}
-.pq{display:flex;flex-direction:column;gap:9px;padding:16px 20px 14px;min-width:0;min-height:0}
-.pq .q{font:800 22px/1.2 var(--display)}
-.pq .chart{flex:1}
-.pq .ctlrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14.5px;color:var(--muted)}
-.ans{display:flex;gap:10px;align-items:flex-start;font:700 17px/1.35 var(--sans);border-top:1px solid var(--rule);padding-top:10px}
-.ans::before{content:"";width:9px;height:9px;margin-top:7px;border-radius:50%;background:var(--navy);flex:none}
-.exbox{font-size:14.5px;line-height:1.4;background:var(--surface-2);border:1px solid var(--rule);border-radius:7px;padding:8px 12px;cursor:default}
-.evn{font:500 12.5px/1.3 var(--mono);color:var(--muted)}
-.take{font:700 22px/1.35 var(--display);background:var(--ink);color:var(--paper);border-radius:10px;padding:16px 26px}
-.take span{font:500 19px/1.4 var(--sans)}
+/* 5. findings */
+.find{flex:1;display:grid;grid-template-columns:1.5fr 1fr;gap:64px;min-height:0;align-items:center}
+.find .side{display:grid;gap:26px}
+.find .side p{font-size:27px;line-height:1.4}
+.find .side .k{font:600 18px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.take{font:700 30px/1.35 var(--display);border-top:2px solid var(--ink);padding-top:22px}
 
-/* ---------- slide 6 ---------- */
-.s6-body{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;position:relative}
-.links{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;overflow:visible}
-.links line{stroke:var(--faint);stroke-width:2;transition:stroke .2s,opacity .2s,stroke-width .2s}
-.chips{display:grid;grid-template-columns:1fr 1fr;column-gap:36px;row-gap:14px;position:relative;z-index:1}
-.chips > div{display:flex;gap:12px}
-.chips .end{justify-content:flex-end}
-.chip{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--rule);border-radius:999px;background:var(--surface);padding:11px 18px;
-  font:600 19px/1.2 var(--sans);transition:opacity .2s,border-color .2s,background .2s}
-.chip.mech-c{border-radius:8px}
-.chip small{font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
-.strats{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:104px;position:relative;z-index:1}
-.strat{padding:30px 36px;display:grid;gap:20px;align-content:start;transition:opacity .2s,border-color .2s,box-shadow .2s}
-.strat .who{font:600 13px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.strat h3{font:800 38px/1.1 var(--display);font-stretch:106%;display:flex;align-items:center;gap:12px}
-.strat h3 .sws{display:inline-flex;gap:4px}
-.strat h3 .sw{width:16px;height:16px;border-radius:4px}
-.strat dl{display:grid;grid-template-columns:250px 1fr;gap:16px 20px}
-.strat dt{font:600 14px/1.6 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.strat dd{font-size:22px;line-height:1.4}
-.strat dd.qq{font:700 24px/1.3 var(--display)}
-.s6-foot{margin-top:34px;font-size:22px;position:relative;z-index:1}
-.s6-foot b{font-variant-numeric:tabular-nums}
-.s6-body.hov-A .strat[data-s="B"],.s6-body.hov-B .strat[data-s="A"]{opacity:.38}
-.s6-body.hov-A .chip[data-for="B"],.s6-body.hov-B .chip[data-for="A"]{opacity:.3}
-.s6-body.hov-A .strat[data-s="A"],.s6-body.hov-B .strat[data-s="B"]{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
-.s6-body.hov-A .chip[data-for="A"],.s6-body.hov-B .chip[data-for="B"]{border-color:var(--navy);background:var(--navy-soft)}
-.s6-body.hov-A line[data-for="A"],.s6-body.hov-B line[data-for="B"]{stroke:var(--navy);stroke-width:3}
-.s6-body.hov-A line[data-for="B"],.s6-body.hov-B line[data-for="A"]{opacity:.2}
-
-/* ---------- speaker notes ---------- */
-#notes{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(1100px,calc(100vw - 32px));max-height:46vh;overflow:auto;z-index:30;
-  background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.25);padding:16px 22px 18px}
-#notes .nh{display:flex;gap:12px;align-items:center;font:600 13px/1.2 var(--mono);color:var(--muted);margin-bottom:10px}
-#notes .nh b{font:800 16px/1.2 var(--display);color:var(--ink)}
-#notes .nh button{margin-left:auto}
-#notes .nb{font-size:18px;line-height:1.55}
-#notes .nb em{color:var(--navy);font-style:normal;font-weight:700}
-#notes .nn{margin-top:10px;font:500 13px/1.3 var(--mono);color:var(--faint)}
-@media (prefers-reduced-motion:reduce){.slide,.slide.on,.progress i,.chip,.strat,.links line{transition:none}.cb.anim{animation:none}}
+/* 6. strategies */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:start}
+.strat{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:44px 48px;display:flex;flex-direction:column;gap:30px;transition:border-color .2s,box-shadow .2s}
+.strat:hover{border-color:var(--navy);box-shadow:0 0 0 1px var(--navy)}
+.strat h3{font:800 44px/1.1 var(--display)}
+.strat .sub{font:500 22px/1 var(--mono);color:var(--muted);margin-top:10px}
+.strat dl{display:grid;grid-template-columns:230px 1fr;gap:22px 24px;margin:0;font-size:27px}
+.strat dt{font:600 17px/1.6 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.strat dd{margin:0}
+.strat .qq{margin-top:6px;padding-top:26px;border-top:1px solid var(--rule);font:700 30px/1.3 var(--display);color:var(--navy)}
+.dot{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:4px}
 </style>
 </head>
 <body>
 <div id="stage">
-<div class="progress" aria-hidden="true"><i id="progress-bar"></i></div>
+<div class="bar" id="bar"></div>
 
-<!-- ===================== Slide 1 ===================== -->
-<section class="slide s1" id="s1" data-presenter="Piero" data-seconds="45" data-title="Title and motivation" aria-label="Slide 1: Prediction Markets and Currency Strategies">
-  <header class="hd">
-    <p class="eyebrow">MFE 230GB · Currency Markets · Final project</p>
-    <h1>Prediction Markets and Currency Strategies</h1>
-    <p class="sub">Do event odds tell us anything about currencies that currency prices do not already know?</p>
-    <p class="team"><b>Romain Almeida</b> · <b>Piero Pelosi</b> · <b>Hino Wirachapong</b> · <b>Thomas Claudel</b> · Berkeley Haas · October 8, 2026</p>
-  </header>
-  <div class="s1-body">
-    <div class="s1-left">
-      <div class="why">
-        <div><span class="k">New.</span><p>Liquid macro contracts barely existed before mid-2024. Kalshi and Polymarket: <b data-k="n.all">80,203</b> markets, <b>$<span data-k="bn.total">11.2</span>bn</b> traded in our sample.</p></div>
-        <div><span class="k">Direct.</span><p>One contract, one event: “Will the Fed cut in December?” A currency price blends every piece of news at once.</p></div>
-        <div><span class="k">Testable.</span><p>Each event maps onto a course mechanism with a known sign, so the rules can be fixed before any backtest.</p></div>
-      </div>
-      <div class="fork-wrap">
-      <div class="fork" id="fork" role="group" aria-label="Two possible answers">
-        <div class="fk-root">Do event odds move...</div>
-        <svg class="fk-lines" viewBox="0 0 64 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0,50 C32,50 32,25 64,25"/><path d="M0,50 C32,50 32,75 64,75"/></svg>
-        <button class="fk-br" data-b="1" aria-pressed="false"><span class="fk-when">before FX</span><span class="fk-arr">→</span><span class="fk-res">a predictor: trade it</span></button>
-        <button class="fk-br" data-b="2" aria-pressed="false"><span class="fk-when">with FX</span><span class="fk-arr">→</span><span class="fk-res">an explainer: use it to read and manage risk</span></button>
-      </div>
-      <p class="fk-cap">Our tests tell which.</p>
-      </div>
-    </div>
-    <figure class="panel s1-chart">
-      <h3 class="ct">Liquid contracts behind our three indices, average per day</h3>
-      <div class="lg"><span><i class="sw mon"></i>US monetary</span><span><i class="sw fis"></i>US fiscal-political</span><span><i class="sw geo"></i>Global geopolitics</span></div>
-      <div id="ch-s1" class="chart"></div>
-      <figcaption class="fnote">Contracts with at least $50k of weekly volume and a trade within 6 hours of the 16:00 London snapshot. 2026Q3 ends <span data-k="s1.end">Sep 24</span>.</figcaption>
-    </figure>
+<!-- 1 -->
+<section class="slide s1">
+  <div class="eyebrow">MFE 230GB · Currency Markets · Final project</div>
+  <h1>Prediction Markets and Currency Strategies</h1>
+  <p class="q">Do Kalshi and Polymarket odds help us trade currencies?</p>
+  <div class="why">
+    <div><b>New data</b><p>Liquid macro bets are recent: about 3 contracts a day in early 2024, about 40 in 2026.</p></div>
+    <div><b>One contract, one event</b><p>"Will the Fed cut in December?" An exchange rate mixes all the news at once.</p></div>
+    <div><b>Economics first</b><p>Course mechanisms fix the direction of every trade before any backtest.</p></div>
   </div>
-  <aside class="notes">
-    <p>The assignment asked for alternative data and named prediction markets as the example. We took that literally, because this data is genuinely new. In early 2024, on an average day, the three indices we ended up using rested on fewer than three liquid contracts. Today they rest on about forty. And each contract isolates one event, like “Will the Fed cut in December?”, while a currency price blends everything at once. So our question was simple. Do event odds move before currencies, in which case we trade them? Or at the same time, in which case they explain moves but cannot predict them? The rest of the talk answers that.</p>
-  </aside>
+  <p class="team">Romain Almeida · Piero Pelosi · Hino Wirachapong · Thomas Claudel · Berkeley Haas · October 8, 2026</p>
 </section>
 
-<!-- ===================== Slide 2 ===================== -->
-<section class="slide s2" id="s2" data-presenter="Piero" data-seconds="55" data-title="What we took from the course" aria-label="Slide 2: What we took from the course">
-  <header class="hd">
-    <p class="eyebrow">Economic framework</p>
-    <h2>Without economics, a signal is a bet. The course gives every trade its sign before we look at any return.</h2>
-  </header>
-  <div class="cards3">
-    <article class="panel mech">
-      <p class="mk">Mechanism 1</p>
+<!-- 2 -->
+<section class="slide">
+  <div><div class="eyebrow">What we take from the course</div>
+  <h2>Three mechanisms tell us the direction of each trade.</h2></div>
+  <div class="cards">
+    <div class="card">
       <h3>Carry and the failure of UIP</h3>
-      <div class="diag">
-        <p class="fxl">rx ≈ (i* − i) − Δs<small>carry minus depreciation</small></p>
-        <div class="uip" aria-label="Schematic: under UIP depreciation equals the rate gap; in the data it is smaller, leaving a premium">
-          <div class="uip-row"><span class="l">UIP says</span><div class="ubars"><i class="gap"></i><i class="dep"></i></div><span class="res">carry earns 0</span></div>
-          <div class="uip-row"><span class="l">Data</span><div class="ubars"><i class="gap"></i><span class="split"><i class="dep" style="width:55%"></i><i class="prem"></i></span></div><span class="res">premium, lost in crashes</span></div>
-        </div>
-        <div class="uip-key"><span><i style="background:var(--navy)"></i>rate gap i* − i</span><span><i style="background:var(--faint)"></i>depreciation Δs</span><span>schematic</span></div>
+      <div class="vis">
+        <div class="formula">rx ≈ (i − i*) − Δs</div>
+        <div class="defs">i: rate on the currency we buy<br>i*: rate on the dollar we borrow<br>Δs: depreciation of the currency we buy</div>
+        <div class="center"><div class="seg" id="uipSeg"><button aria-pressed="true" data-v="uip">UIP says</button><button aria-pressed="false" data-v="data">Data show</button></div></div>
+        <svg id="uipSvg" viewBox="0 0 440 150" width="100%" role="img" aria-label="Interest gap versus depreciation"></svg>
+        <p class="say" id="uipTxt"></p>
       </div>
-      <dl class="mrows">
-        <dt>What it predicts</dt>
-        <dd>UIP says high-yield currencies fall by the rate gap, so carry earns zero. They fall less: carry earns a premium that pays for crash risk in global risk-off (downside beta, Lettau, Maggiori and Weber).</dd>
-        <dt>Sign we trade</dt>
-        <dd>Long high-carry currencies, short low-carry; cut exposure when crash risk rises.</dd>
-      </dl>
-      <p class="used"><span class="lab">Used in</span><span class="stag"><i class="sw geo"></i>Strategy B</span></p>
-    </article>
-    <article class="panel mech">
-      <p class="mk">Mechanism 2</p>
+      <div class="use"><span class="tag"><span class="dot" style="background:var(--c-geo)"></span>Strategy B · EM carry</span></div>
+    </div>
+    <div class="card">
       <h3>Monetary vs fiscal dominance</h3>
-      <div class="diag">
-        <div class="seg" id="regime" role="group" aria-label="Regime"><button data-r="m" aria-pressed="true">Monetary dominance</button><button data-r="f" aria-pressed="false">Fiscal dominance</button></div>
-        <div class="chain" id="chain" data-regime="m" aria-live="polite">
-          <div class="cb">Bigger deficit</div><i>→</i>
-          <div class="cb" data-m="Fed expected higher" data-f="Debt worries, risk premium">Fed expected higher</div><i>→</i>
-          <div class="cb flip" data-m="Rates ↑" data-f="Yields ↑">Rates ↑</div><i>→</i>
-          <div class="cb flip end" data-m="USD ↑" data-f="USD ↓">USD ↑</div>
-        </div>
-        <p class="sig">Signature of fiscal dominance: yields and the currency move in opposite directions (UK 2022, US Apr to May 2025).</p>
+      <div class="vis">
+        <p class="say" style="text-align:center">Hawkish Fed news: <b>dollar up</b>.<br>Bigger deficit:</p>
+        <div class="center"><div class="seg" id="domSeg"><button aria-pressed="true" data-v="md">Monetary dominance</button><button aria-pressed="false" data-v="fd">Fiscal dominance</button></div></div>
+        <div class="vchain" id="domChain"></div>
+        <p class="say small" id="domTxt" style="text-align:center"></p>
       </div>
-      <dl class="mrows">
-        <dt>What it predicts</dt>
-        <dd>Hawkish Fed news lifts the dollar; fiscal news lifts it or sinks it depending on the regime.</dd>
-        <dt>Sign we trade</dt>
-        <dd>Monetary +1; fiscal +1, or −1 when the 60-day yield/dollar correlation turns negative.</dd>
-      </dl>
-      <p class="used"><span class="lab">Used in</span><span class="stag"><i class="sw mon"></i><i class="sw fis"></i>Strategy A</span></p>
-    </article>
-    <article class="panel mech">
-      <p class="mk">Mechanism 3</p>
+      <div class="use"><span class="tag"><span class="dot" style="background:var(--c-mon)"></span><span class="dot" style="background:var(--c-fis)"></span>Strategy A · the dollar</span></div>
+    </div>
+    <div class="card">
       <h3>Terms of trade</h3>
-      <div class="diag">
-        <div class="tot">
-          <div class="tot-src">Oil ↑</div>
-          <svg class="fk-lines" viewBox="0 0 48 100" preserveAspectRatio="none" aria-hidden="true"><path d="M0,50 C24,50 24,25 48,25"/><path d="M0,50 C24,50 24,75 48,75"/></svg>
-          <div class="tot-out up"><b>Exporters ↑</b><span>BRL · MXN · COP · NOK · CAD</span></div>
-          <div class="tot-out dn"><b>Importers ↓</b><span>KRW · INR</span></div>
-        </div>
+      <div class="vis">
+        <div class="chain"><span>Oil ↑</span><i>→</i><span class="up">BRL, MXN, COP ↑</span></div>
+        <div class="chain"><span>Oil ↑</span><i>→</i><span class="dn">KRW ↓</span></div>
+        <p class="say" style="text-align:center">Exporters gain, importers lose. A Middle East shock moves emerging currencies in opposite directions.</p>
       </div>
-      <dl class="mrows">
-        <dt>What it predicts</dt>
-        <dd>An oil shock moves exporters’ and importers’ currencies in opposite directions.</dd>
-        <dt>Sign we trade</dt>
-        <dd>Which currencies win a Middle East shock.</dd>
+      <div class="use"><span class="tag"><span class="dot" style="background:var(--c-geo)"></span>Strategy B · EM carry</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <div><div class="eyebrow">Alternative data</div>
+  <h2>From 80,000 bets to one daily index per theme.</h2></div>
+  <div class="funnel"><span><b>80,203</b>markets</span><i>→</i><span><b>29,704</b>macro</span><i>→</i><span><b>9,103</b>contracts used</span><i>→</i><span><b>3</b>indices</span></div>
+  <div class="steps" id="steps">
+    <button class="step" aria-pressed="true" data-i="0"><span class="n">1</span><span class="t">Classify</span></button>
+    <button class="step" aria-pressed="false" data-i="1"><span class="n">2</span><span class="t">Snapshot</span></button>
+    <button class="step" aria-pressed="false" data-i="2"><span class="n">3</span><span class="t">Value</span></button>
+    <button class="step" aria-pressed="false" data-i="3"><span class="n">4</span><span class="t">Standardise</span></button>
+    <button class="step" aria-pressed="false" data-i="4"><span class="n">5</span><span class="t">Average</span></button>
+  </div>
+  <div class="detail">
+    <div><p class="txt" id="stTxt"></p><p class="ex" id="stEx"></p></div>
+    <div id="stVis"></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="slide">
+  <div><div class="eyebrow">Coverage gate</div>
+  <h2>Only three indices are liquid enough: the US and the world.</h2></div>
+  <div class="cov">
+    <svg id="covSvg" viewBox="0 0 980 600" width="100%" role="img" aria-label="Share of weekdays covered, 2024 to 2025, by index"></svg>
+    <div class="side">
+      <div class="count"><span id="covN">3</span><small>indices pass the gate</small></div>
+      <div class="gate"><span>Gate: <b id="covG">60</b>% of weekdays</span><input type="range" id="covR" min="30" max="90" value="60"></div>
+      <div class="pts">
+        <p><b>Rule, fixed before any backtest:</b> a contract with $50k of weekly volume on 60% of weekdays (2024 to 2025).</p>
+        <p><b>Robust:</b> any gate from 53% to 68% keeps the same three.</p>
+        <p><b>So:</b> Strategy A trades the dollar, Strategy B uses global geopolitics.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <div><div class="eyebrow">What we found</div>
+  <h2>Prediction markets move with currencies, not before them.</h2></div>
+  <div class="find">
+    <div style="display:grid;gap:22px">
+      <div class="seg" id="fSeg"><button aria-pressed="true" data-v="d">Same day vs later</button><button aria-pressed="false" data-v="h">Hour by hour</button><button aria-pressed="false" data-v="w">Weekend</button></div>
+      <svg id="fSvg" viewBox="0 0 1000 560" width="100%" role="img" aria-label="Evidence chart"></svg>
+    </div>
+    <div class="side">
+      <div><div class="k" id="fK"></div><p id="fTxt"></p></div>
+      <p class="take">Prediction markets explain currency moves in real time. They do not forecast them.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <div><div class="eyebrow">Two strategies</div>
+  <h2>Same data, two different jobs.</h2></div>
+  <div class="two">
+    <div class="strat">
+      <div><h3>Strategy A</h3><div class="sub">9 G10 currencies vs USD · daily</div></div>
+      <dl>
+        <dt>Data</dt><dd><span class="dot" style="background:var(--c-mon)"></span><span class="dot" style="background:var(--c-fis)"></span> US monetary and fiscal odds</dd>
+        <dt>Mechanism</dt><dd>Monetary vs fiscal dominance</dd>
+        <dt>The odds decide</dt><dd>Long or short the dollar</dd>
       </dl>
-      <p class="used"><span class="lab">Used in</span><span class="stag"><i class="sw geo"></i>Strategy B</span><span class="note">and it explains B’s result</span></p>
-    </article>
-  </div>
-  <p class="strip"><b>Also from the course:</b> covered interest parity (carry read from forwards and NDFs) and de facto exchange-rate regimes (Ilzetzki, Reinhart, Rogoff) to pick which emerging currencies are tradable.</p>
-  <aside class="notes">
-    <p>Without economics, a signal is just a bet. So before touching the data we fixed, from the course, the sign of every trade. Three mechanisms. One, carry and the failure of uncovered interest parity: high-yield currencies do not fall enough, so carry earns a premium, which pays for crash risk in global sell-offs. That is the base of Strategy B. Two, monetary versus fiscal dominance. Hawkish Fed news lifts the dollar. A bigger deficit lifts it too in normal times, but sinks it when markets doubt the debt, like the UK in 2022 or the US in spring 2025. <em>[click the toggle]</em> Same news, opposite sign. That is Strategy A. Three, terms of trade: oil up lifts exporters’ currencies and hurts importers’. Keep this one in mind; it explains Strategy B’s result.</p>
-  </aside>
-</section>
-
-<!-- ===================== Slide 3 ===================== -->
-<section class="slide s3" id="s3" data-presenter="Piero" data-seconds="65" data-title="From bets to a daily index" aria-label="Slide 3: From 80,000 bets to a daily index">
-  <header class="hd">
-    <p class="eyebrow">Alternative data: prediction markets</p>
-    <h2>Every contract becomes one number per day; contracts on the same theme and country are averaged into an index.</h2>
-  </header>
-  <div class="s3-body">
-    <div class="panel funnel">
-      <div class="fn-rows" id="funnel">
-        <div class="fr" data-f="all"><i class="bar"></i><span><b data-k="n.all">80,203</b> markets</span></div>
-        <div class="fr" data-f="macro"><i class="bar"></i><span><b data-k="n.macro">29,704</b> macro</span></div>
-        <div class="fr" data-f="usable"><i class="bar"></i><span><b data-k="n.usable">11,276</b> we can sign (direction or bracket)</span></div>
-        <div class="fr" data-f="panel"><i class="bar"></i><span><b data-k="n.panel">9,103</b> contracts in the daily panel</span></div>
-        <div class="fr" data-f="pass"><span class="chips3"><i class="mon"></i><i class="fis"></i><i class="geo"></i></span><span><b data-k="n.pass">3</b> indices pass the gate</span></div>
-      </div>
-      <p class="fn-side">Kalshi <b data-k="n.kalshi">50,281</b> and Polymarket <b data-k="n.poly">29,922</b> markets with trades, January 2024 to September 2026. <b>$<span data-k="bn.total">11.2</span>bn</b> traded (Kalshi <span data-k="bn.kalshi">2.28</span>, Polymarket <span data-k="bn.poly">8.88</span>). Brackets collapse into one expected-value contract, so the panel holds fewer contracts than we can sign.</p>
+      <p class="qq">Can event odds time the dollar, after trading costs?</p>
     </div>
-    <ol class="pipe" id="pipe" role="tablist" aria-label="Five steps from contract to index">
-      <li><button role="tab" id="st-1" data-step="1" aria-selected="false" aria-controls="dp-1"><span class="n">STEP 1</span><b>Classify</b><span class="rule">theme, country, direction, by fixed rules (no AI model: reproducible, free, no API).</span></button></li>
-      <li><button role="tab" id="st-2" data-step="2" aria-selected="false" aria-controls="dp-2"><span class="n">STEP 2</span><b>Snapshot</b><span class="rule">last trade before 16:00 London; stale if no trade for 6 hours; kept only 3 to 365 days before resolution and priced 3% to 97%.</span></button></li>
-      <li><button role="tab" id="st-3" data-step="3" aria-selected="true" aria-controls="dp-3"><span class="n">STEP 3</span><b>Value</b><span class="rule">probability; brackets → expected value in bp or pp; “by-date” contracts → hazard rate.</span></button></li>
-      <li><button role="tab" id="st-4" data-step="4" aria-selected="false" aria-controls="dp-4"><span class="n">STEP 4</span><b>Standardise</b><span class="rule">daily change ÷ the contract’s usual daily move, × direction sign, capped at ±5.</span></button></li>
-      <li><button role="tab" id="st-5" data-step="5" aria-selected="false" aria-controls="dp-5"><span class="n">STEP 5</span><b>Index</b><span class="rule">volume-weighted average per country × theme; running sum = index level.</span></button></li>
-    </ol>
-    <div class="panel detail">
-      <div class="dp-head"><span class="lab" id="dp-label">Step 3 of 5 · Value</span>
-        <span class="stepnav"><button class="nbtn" id="dp-prev" aria-label="Previous step">‹</button><button class="nbtn" id="dp-next" aria-label="Next step">›</button></span></div>
-      <div class="dp" id="dp-1" data-step="1" role="tabpanel" aria-labelledby="st-1" hidden>
-        <ul class="exl" id="examples"></ul>
-      </div>
-      <div class="dp tl" id="dp-2" data-step="2" role="tabpanel" aria-labelledby="st-2" hidden>
-        <svg viewBox="0 0 1700 230" role="img" aria-label="One London day: trades up to 16:00 set the price for day t, later trades count for day t plus 1; the signal is read at 16:00 London and traded at the 17:00 New York close, six hours later.">
-          <defs><marker id="ah6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah"/></marker></defs>
-          <path class="br" d="M718,70 v-10 h395 v10"/>
-          <text x="916" y="46" text-anchor="middle">last trade within 6 hours, else stale</text>
-          <rect class="bt" x="60" y="80" width="1053" height="36" rx="4"/>
-          <text x="586" y="104" text-anchor="middle" class="strong">trades up to 16:00 London → price for day t</text>
-          <rect class="bt1" x="1113" y="80" width="527" height="36" rx="4"/>
-          <text x="1376" y="104" text-anchor="middle">later trades → day t+1</text>
-          <line class="axis" x1="60" y1="132" x2="1640" y2="132"/>
-          <line class="tick" x1="60" y1="132" x2="60" y2="140"/><text x="60" y="160" text-anchor="middle">00:00</text>
-          <line class="tick" x1="323" y1="132" x2="323" y2="140"/><text x="323" y="160" text-anchor="middle">04:00</text>
-          <line class="tick" x1="587" y1="132" x2="587" y2="140"/><text x="587" y="160" text-anchor="middle">08:00</text>
-          <line class="tick" x1="850" y1="132" x2="850" y2="140"/><text x="850" y="160" text-anchor="middle">12:00</text>
-          <line class="tick" x1="1640" y1="132" x2="1640" y2="140"/><text x="1640" y="160" text-anchor="end">24:00 London</text>
-          <line class="snap" x1="1113" y1="36" x2="1113" y2="182"/>
-          <line class="ny" x1="1508" y1="80" x2="1508" y2="182"/>
-          <line x1="1121" y1="176" x2="1500" y2="176" stroke="var(--ink)" stroke-width="1.5" marker-start="url(#ah6)" marker-end="url(#ah6)"/>
-          <text x="1311" y="166" text-anchor="middle">6 hours</text>
-          <text x="1113" y="210" text-anchor="middle" class="strong">16:00 London snapshot</text>
-          <text x="1508" y="210" text-anchor="middle" class="strong">17:00 New York close: we trade</text>
-        </svg>
-        <p class="say">No look-ahead: the signal is known 6 hours before we trade at the New York close.</p>
-      </div>
-      <div class="dp hz" id="dp-3" data-step="3" role="tabpanel" aria-labelledby="st-3">
-        <div class="hz-text">
-          <h3 class="ct">A ‘by Dec 31’ contract decays even when nothing changes.</h3>
-          <label class="hz-l" for="hz">Risk per month <output id="hz-o" for="hz">10%</output></label>
-          <input id="hz" type="range" min="2" max="20" step="1" value="10">
-          <dl class="hz-nums">
-            <div><dt>6 months left</dt><dd>p = <span id="hz-p6">45%</span></dd></div>
-            <div><dt>1 month left</dt><dd>p = <span id="hz-p1">9.5%</span></dd></div>
-            <div><dt>Hazard, both times</dt><dd><span id="hz-h">10%</span>/month</dd></div>
-          </dl>
-          <p class="hz-read">Read naively, the falling price looks like a stream of good news that never happened. The hazard stays flat. Without this fix, our US monetary index drifts by <b data-k="drift.raw">0.079</b> sd a day (t = <span data-k="drift.raw_t">2.9</span>); with it, <b data-k="drift.hz">0.06</b> (t = <span data-k="drift.hz_t">2.1</span>).</p>
-        </div>
-        <div class="hz-chart"><p class="ct2">Price (probability)</p><div id="ch-hz-p" class="chart"></div></div>
-        <div class="hz-chart"><p class="ct2">Implied hazard −ln(1−p)/τ</p><div id="ch-hz-h" class="chart"></div></div>
-      </div>
-      <div class="dp fx-step" id="dp-4" data-step="4" role="tabpanel" aria-labelledby="st-4" hidden>
-        <div>
-          <p class="formula">z = (Δvalue / √gap) / σ<sub>EWMA</sub> × sign</p>
-          <p class="fx-say">A 2-point move in a calm contract counts more than in a jumpy one.</p>
-        </div>
-        <ul class="terms">
-          <li><b>Δvalue</b><span>change in the contract’s value since its previous fresh snapshot</span></li>
-          <li><b>√gap</b><span>a change that spans several days is scaled back to one day</span></li>
-          <li><b>σ<sub>EWMA</sub></b><span>the contract’s usual daily move, from its own past changes only</span></li>
-          <li><b>sign</b><span>+1 hawkish or escalation, −1 dovish or de-escalation</span></li>
-          <li><b>cap</b><span>z is capped at ±5, so one jump cannot dominate</span></li>
-        </ul>
-      </div>
-      <div class="dp fx-step" id="dp-5" data-step="5" role="tabpanel" aria-labelledby="st-5" hidden>
-        <div>
-          <p class="formula" style="font-size:33px">index change = Σ volume × z / Σ volume</p>
-          <p class="fx-say">Cumulated like a rolled futures series.</p>
-        </div>
-        <ul class="terms">
-          <li><b>volume</b><span>the contract’s trailing 7-day dollar volume</span></li>
-          <li><b>Σ</b><span>over the live contracts of one country × theme cell, each day</span></li>
-          <li><b>level</b><span>running sum of the daily changes: contracts enter and expire, the index runs on</span></li>
-        </ul>
-      </div>
+    <div class="strat">
+      <div><h3>Strategy B</h3><div class="sub">6 emerging currencies · monthly</div></div>
+      <dl>
+        <dt>Data</dt><dd><span class="dot" style="background:var(--c-geo)"></span> Global geopolitical odds</dd>
+        <dt>Mechanism</dt><dd>Carry, UIP failure, terms of trade</dd>
+        <dt>The odds decide</dt><dd>How much carry to hold</dd>
+      </dl>
+      <p class="qq">Can event odds protect a carry portfolio from crashes?</p>
     </div>
   </div>
-  <aside class="notes">
-    <p>Then the data. We start from about <span data-k="n.all_k">80,000</span> Kalshi and Polymarket markets, <span data-k="bn.total_int">11</span> billion dollars traded. About <span data-k="n.macro_k">30,000</span> are macro; <span data-k="n.usable_k">11,000</span> have an economic direction we can sign. Each goes through five steps. <em>[click Classify]</em> Fixed rules, no AI model, tag the theme, the country and the direction: a higher probability of a Fed cut is dovish, so it gets a minus sign. We read the last price before 16:00 London every day. <em>[click Value]</em> One trap: “by-date” contracts. A “ceasefire by January 31” contract loses value every day nothing happens, even if the risk has not changed. <em>[move the slider]</em> So we convert the price into the implied risk per month, the hazard rate, which stays flat. Finally, each daily change is divided by the contract’s usual move, signed, capped, and averaged by volume into one index per theme and country.</p>
-  </aside>
+  <p class="small">Built on separate contracts: daily return correlation between A and B is −0.04.</p>
 </section>
 
-<!-- ===================== Slide 4 ===================== -->
-<section class="slide s4" id="s4" data-presenter="Piero" data-seconds="50" data-title="The coverage gate" aria-label="Slide 4: The coverage gate">
-  <header class="hd">
-    <p class="eyebrow">Coverage gate</p>
-    <h2>Prediction markets talk about the US and the world, not about Germany or Japan.</h2>
-  </header>
-  <div class="s4-body">
-    <figure class="panel heat">
-      <h3 class="ct">Share of weekdays with at least one eligible contract, by quarter</h3>
-      <div class="hlegend"><span>0%</span><i class="ramp"></i><span>100%</span><span style="margin-left:14px">eligible: at least $50k of weekly volume, priced, not stale</span></div>
-      <div id="ch-heat" class="chart"></div>
-    </figure>
-    <div class="s4-right">
-      <div class="panel ctl">
-        <label for="gate">Gate: share of weekdays covered in 2024 to 2025 <output id="gate-o" for="gate">60%</output></label>
-        <input id="gate" type="range" min="30" max="90" step="1" value="60">
-        <div class="ctl-row"><span>Weekly volume floor</span><div class="seg" id="vol" role="group" aria-label="Weekly volume floor"><button data-v="50" aria-pressed="true">$50k</button><button data-v="10" aria-pressed="false">$10k</button></div></div>
-        <p class="counter">Cells that pass: <b id="pass-n">3</b></p>
-        <p class="passlist" id="pass-list"></p>
-        <p class="same">Same three cells for any gate between <b data-k="s4.lo">53</b>% and <b data-k="s4.hi">68</b>%.</p>
-        <p class="cnote">Colors always show the $50k floor; the toggle changes only pass or fail.</p>
-      </div>
-      <div class="tblocks">
-        <div><h3>Why a gate?</h3><p>A daily signal has to exist on most days. A cell alive one day in three is mostly zeros: its volatility and z-scores rest on a handful of contracts.</p></div>
-        <div><h3>Why 60% and $50k?</h3><p>Fixed in the spec before any data: a signal on three trading days out of five, and enough money behind each price. The result does not hinge on it: even at $10k, the best non-US developed-market cell (UK fiscal) covers <b data-k="s4.uk10">31</b>% of days.</p></div>
-        <div><h3>So:</h3><p>Strategy A trades the dollar; global geopolitics feeds Strategy B. Coverage is rising fast (UK fiscal: <b data-k="s4.uk_test">55</b>% of days in 2026).</p></div>
-      </div>
-    </div>
-  </div>
-  <aside class="notes">
-    <p>An index is only useful if it exists most days. So the spec fixed a gate before any backtest: at least one contract with 50,000 dollars of weekly volume, on 60% of weekdays in 2024 and 2025. This heatmap is the most important table of the project. Only three cells pass: US monetary policy, US fiscal politics, and global geopolitics. Nothing on Germany, Japan or the UK. <em>[drag the slider]</em> And it is not a threshold artefact: anywhere between <span data-k="s4.lo">53</span> and <span data-k="s4.hi">68</span>% gives the same three, and even at 10,000 dollars the best non-US developed-market cell is the UK at <span data-k="s4.uk10">31</span>%. So prediction markets speak about the US and about the world. That decides our design: Strategy A becomes a dollar strategy, and geopolitics feeds Strategy B.</p>
-  </aside>
-</section>
-
-<!-- ===================== Slide 5 ===================== -->
-<section class="slide s5" id="s5" data-presenter="Piero" data-seconds="60" data-title="Does the data move before currencies?" aria-label="Slide 5: Does the data move before currencies?">
-  <header class="hd">
-    <p class="eyebrow">What we asked the data</p>
-    <h2>Prediction markets move with currencies, not before them.</h2>
-  </header>
-  <div class="s5-body">
-    <div class="p3">
-      <figure class="panel pq">
-        <p class="lab">a · Daily</p>
-        <h3 class="q">Same day or later?</h3>
-        <div class="lg"><span><i class="sw mon"></i>US monetary</span><span><i class="sw fis"></i>US fiscal-political</span><span>t-statistic, G10 vs USD</span></div>
-        <div id="ch-5a" class="chart"></div>
-        <p class="exbox" id="ex-day">Aug 2, 2024, weak US jobs report: our Fed index has its largest dovish move (<span data-k="s5.ex_d">−5</span> sd) and the dollar falls <span data-k="s5.ex_usd">0.8</span>% vs G10, the same day.</p>
-        <p class="ans">Fed news hits both markets the same day, then nothing.</p>
-      </figure>
-      <figure class="panel pq">
-        <p class="lab">b · Hourly</p>
-        <h3 class="q">Who moves first, hour by hour?</h3>
-        <div class="ctlrow"><div class="seg" id="cellb" role="group" aria-label="Cell"><button data-c="mon" aria-pressed="true">US monetary</button><button data-c="fis" aria-pressed="false">US fiscal</button><button data-c="geo" aria-pressed="false">Global geopolitics</button></div></div>
-        <div class="lg" id="lg-5b"><span><i class="lnk" id="lg5b-c"></i><span id="lg5b-pm">Fed odds after a big dollar move</span></span><span><i class="lnk dash"></i><span id="lg5b-fx">Dollar after a big move in Fed odds</span></span></div>
-        <div id="ch-5b" class="chart"></div>
-        <p class="evn" id="evn-5b"></p>
-        <p class="ans">Nothing before hour 0; Fed odds keep adjusting an hour after the dollar.</p>
-      </figure>
-      <figure class="panel pq">
-        <p class="lab">c · Weekend</p>
-        <h3 class="q">Does the weekend move predict Monday?</h3>
-        <p class="fnote">FX closes Friday 17:00 New York; prediction markets keep trading.</p>
-        <div class="ctlrow"><span>Reopening measured at:</span><div class="seg" id="reopen" role="group" aria-label="Reopening measured at"><button data-o="london" aria-pressed="true">Monday 07:00 London</button><button data-o="ny" aria-pressed="false">Sunday 18:00 New York</button></div></div>
-        <div id="ch-5c" class="chart"></div>
-        <p class="ans"><span><span id="n-5c" data-k="s5c.n">1,278</span> pair-weekends: no weekend move predicts the reopening (all |t| &lt; <span data-k="s5c.bound">1.3</span>).</span></p>
-      </figure>
-    </div>
-    <p class="take">Prediction markets explain currency moves in real time; they do not predict them. <span>The bar for both strategies: A must survive with a slower signal and real costs; B uses event odds to manage risk, not to forecast returns.</span></p>
-  </div>
-  <aside class="notes">
-    <p>Before building strategies, we asked the data the key question: does it move first? Three tests. Left: currency returns regressed on our Fed index. Same day, a t of <span data-k="s5a.mon0_int">4</span>. Next day, <span data-k="s5a.mon1">0.75</span>; five days, <span data-k="s5a.mon5">1</span>. Fed news hits both markets the same day and stops there. A concrete case: our largest Fed move is August 2nd, 2024, the weak jobs report. Cut odds jumped and the dollar fell about <span data-k="s5.ex_usd">0.8</span>% that same day. Middle: hour by hour around the biggest dollar moves. Nothing before hour zero, and prediction markets keep adjusting one hour after. Right: the weekend, when FX is closed but prediction markets trade. Their weekend moves do not predict Monday’s reopening. So prediction markets explain currency moves in real time; they do not predict them. That sets the bar for both strategies.</p>
-  </aside>
-</section>
-
-<!-- ===================== Slide 6 ===================== -->
-<section class="slide s6" id="s6" data-presenter="Piero" data-seconds="25" data-title="Two strategies, two uses of the same data" aria-label="Slide 6: Two strategies, two uses of the same data">
-  <header class="hd">
-    <p class="eyebrow">From data to strategies</p>
-    <h2>The same data gets two different jobs: choose the direction of the dollar, or choose how much risk to hold.</h2>
-  </header>
-  <div class="s6-body" id="s6-body">
-    <svg class="links" id="links" aria-hidden="true"></svg>
-    <div class="chips">
-      <div><span class="chip" data-for="A"><small>data</small><i class="sw mon"></i>US monetary</span><span class="chip" data-for="A"><small>data</small><i class="sw fis"></i>US fiscal-political</span></div>
-      <div class="end"><span class="chip" data-for="B"><small>data</small><i class="sw geo"></i>Global geopolitics</span></div>
-      <div class="end"><span class="chip mech-c" data-for="A"><small>mechanism</small>Monetary vs fiscal dominance</span></div>
-      <div><span class="chip mech-c" data-for="B"><small>mechanism</small>Carry and UIP failure</span><span class="chip mech-c" data-for="B"><small>mechanism</small>Terms of trade</span></div>
-    </div>
-    <div class="strats">
-      <article class="panel strat" data-s="A" tabindex="0">
-        <p class="who">Presenter: Romain</p>
-        <h3><span class="sws"><i class="sw mon"></i><i class="sw fis"></i></span>Strategy A · Developed markets</h3>
-        <dl>
-          <dt>Data</dt><dd>US monetary + US fiscal-political indices.</dd>
-          <dt>Mechanism</dt><dd>Monetary vs fiscal dominance.</dd>
-          <dt>Job of the prediction markets</dt><dd>Pick the direction: long or short the dollar against 9 G10 currencies, every day.</dd>
-          <dt>Question</dt><dd class="qq">Can event odds time the dollar once trading costs are paid?</dd>
-        </dl>
-      </article>
-      <article class="panel strat" data-s="B" tabindex="0">
-        <p class="who">Presenter: Thomas</p>
-        <h3><span class="sws"><i class="sw geo"></i></span>Strategy B · Emerging markets</h3>
-        <dl>
-          <dt>Data</dt><dd>Global geopolitics index.</dd>
-          <dt>Mechanisms</dt><dd>Carry and UIP failure; terms of trade.</dd>
-          <dt>Job of the prediction markets</dt><dd>Pick how much carry to hold, from 100% down to 0%, in a BRL, MXN, COP, CLP, ZAR, KRW carry portfolio.</dd>
-          <dt>Question</dt><dd class="qq">Can event odds protect a carry portfolio from crashes?</dd>
-        </dl>
-      </article>
-    </div>
-    <p class="s6-foot">Built on separate contracts on purpose: daily return correlation between A and B = <b data-k="s6.corr">−0.04</b>.</p>
-  </div>
-  <aside class="notes">
-    <p>So the same data gets two different jobs. Romain’s Strategy A asks whether Fed and fiscal odds can time the dollar against the G10 once trading costs are paid. Thomas’s Strategy B asks a risk question: can geopolitical odds protect an emerging-market carry portfolio from crashes? They use separate contracts, so they are genuinely different strategies. Romain.</p>
-  </aside>
-</section>
-
-<!-- Teammates: append further <section class="slide" data-presenter="..." data-seconds="..." data-title="..."> blocks here,
-     each with its own <aside class="notes">. Navigation, counter and notes pick them up automatically. -->
-
-<footer class="deck-foot">
-  <span class="brand"><b>MFE 230GB</b>Prediction Markets and Currency Strategies</span>
-  <span class="who" id="foot-who"></span>
-  <span class="nav"><kbd>N</kbd> notes <kbd>F</kbd> full screen
-    <button class="nbtn" id="prev" aria-label="Previous slide">‹</button><span class="count" id="count">1 / 6</span><button class="nbtn" id="next" aria-label="Next slide">›</button></span>
-</footer>
+<div class="foot"><b>MFE 230GB</b><span>Prediction Markets and Currency Strategies</span>
+  <div class="nav"><button id="prev" aria-label="Previous">‹</button><span class="count" id="count"></span><button id="next" aria-label="Next">›</button></div></div>
 </div>
 
-<div id="notes" role="dialog" aria-label="Speaker notes" hidden>
-  <div class="nh"><b id="notes-title"></b><span id="notes-meta"></span><button class="nbtn" id="notes-close" aria-label="Close notes">×</button></div>
-  <div class="nb" id="notes-body"></div>
-  <p class="nn" id="notes-next"></p>
-</div>
-<div id="tip" class="tip" hidden></div>
-
-<script id="deck-data">window.DECK_DATA = {"cells":[{"key":"mon","label":"US monetary"},{"key":"fis","label":"US fiscal-political"},{"key":"geo","label":"Global geopolitics"}],"s1":{"quarters":["2024Q1","2024Q2","2024Q3","2024Q4","2025Q1","2025Q2","2025Q3","2025Q4","2026Q1","2026Q2","2026Q3"],"seg":{"mon":[1.5,1.9,5.6,3.7,4.6,5.8,5.7,4.4,5.9,5.7,8.4],"fis":[1.1,1.6,11.4,20.7,0.4,0.3,0.7,5.8,7.3,7.0,8.7],"geo":[0.1,0.2,1.1,7.1,4.1,10.5,7.6,9.1,28.6,32.5,20.9]},"total":[2.7,3.7,18.1,31.5,9.1,16.6,14.0,19.3,41.8,45.2,38.0],"partial":"2026Q3","end":"2026-09-24"},"s3":{"all":80203,"kalshi":50281,"poly":29922,"macro":29704,"usable":11276,"panel":9103,"pass":3,"bn_kalshi":2.28,"bn_poly":8.88},"examples":[{"title":"Will the upper bound of the federal funds rate be above 3.50% following the Fed's Apr 28, 2027 meeting?","zone":"US","theme":"MONETARY","dir":1,"meaning":"hawkish","rule":"series:KXFED · monetary:rate-above"},{"title":"Russia x Ukraine ceasefire by January 31, 2026?","zone":"Global","theme":"GEOPOLITICS","dir":-1,"meaning":"de-escalation","rule":"text:russia x  · geo:deescalate:ceasefire"},{"title":"Will the Republican Party win the NJ-08 House seat?","zone":"US","theme":"FISCAL-POLITICAL","dir":0,"meaning":"","rule":"text:election · fiscal:none"}],"s4":{"quarters":["2024Q1","2024Q2","2024Q3","2024Q4","2025Q1","2025Q2","2025Q3","2025Q4","2026Q1","2026Q2","2026Q3"],"rows":[{"label":"US · Monetary","cell":"US_MONETARY","s50":0.939,"s10":0.998,"test50":1.0,"q":[0.785,0.723,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0],"n":[12,17,21,10,12,14,15,12,26,17,20]},{"label":"Global · Geopolitics","cell":"GLOBAL_GEOPOLITICS","s50":0.767,"s10":0.969,"test50":1.0,"q":[0.138,0.215,0.773,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0],"n":[3,2,5,33,24,68,46,48,235,210,99]},{"label":"US · Fiscal-political","cell":"US_FISCAL_POLITICAL","s50":0.685,"s10":0.914,"test50":1.0,"q":[0.923,1.0,1.0,0.955,0.281,0.246,0.288,0.773,1.0,1.0,1.0],"n":[3,15,42,116,7,2,6,57,61,29,20]},{"label":"US · Geopolitics","cell":"US_GEOPOLITICS","s50":0.526,"s10":0.642,"test50":1.0,"q":[0.062,0.0,0.0,0.652,1.0,0.877,0.621,1.0,1.0,1.0,1.0],"n":[1,0,0,5,5,15,10,15,134,106,48]},{"label":"China · Geopolitics","cell":"CN_GEOPOLITICS","s50":0.331,"s10":0.746,"test50":1.0,"q":[0.062,0.185,0.379,0.455,0.328,0.431,0.379,0.424,1.0,1.0,1.0],"n":[1,1,1,1,1,1,1,3,5,5,1]},{"label":"US · Tariffs","cell":"US_TRADE_TARIFFS","s50":0.308,"s10":0.53,"test50":0.241,"q":[0.0,0.0,0.0,0.076,0.781,0.831,0.273,0.515,0.719,0.0,0.0],"n":[0,0,0,2,17,31,4,5,7,0,0]},{"label":"US · Inflation","cell":"US_INFLATION","s50":0.25,"s10":0.53,"test50":0.277,"q":[0.0,0.0,0.0,0.0,0.281,0.831,0.576,0.318,0.453,0.169,0.21],"n":[0,0,0,0,3,23,18,9,9,2,6]},{"label":"Korea · Fiscal-political","cell":"KR_FISCAL_POLITICAL","s50":0.226,"s10":0.344,"test50":0.0,"q":[0.0,0.0,0.0,0.303,1.0,0.477,0.045,0.0,0.0,0.0,0.0],"n":[0,0,0,6,7,10,1,0,0,0,0]},{"label":"China · Tariffs","cell":"CN_TRADE_TARIFFS","s50":0.199,"s10":0.367,"test50":0.042,"q":[0.0,0.0,0.0,0.015,0.375,0.646,0.258,0.303,0.125,0.0,0.0],"n":[0,0,0,1,1,8,3,3,1,0,0]},{"label":"Euro area · Fiscal-political","cell":"EA_FISCAL_POLITICAL","s50":0.076,"s10":0.31,"test50":0.178,"q":[0.0,0.062,0.0,0.333,0.0,0.0,0.0,0.212,0.0,0.0,0.548],"n":[0,1,0,3,0,0,0,2,0,0,5]},{"label":"UK · Fiscal-political","cell":"UK_FISCAL_POLITICAL","s50":0.076,"s10":0.314,"test50":0.55,"q":[0.0,0.0,0.0,0.03,0.328,0.015,0.091,0.152,0.531,0.892,0.21],"n":[0,0,0,1,1,1,1,1,9,10,3]},{"label":"Mexico · Tariffs","cell":"MX_TRADE_TARIFFS","s50":0.061,"s10":0.191,"test50":0.0,"q":[0.0,0.0,0.0,0.061,0.281,0.154,0.0,0.0,0.0,0.0,0.0],"n":[0,0,0,1,5,2,0,0,0,0,0]},{"label":"Canada · Tariffs","cell":"CA_TRADE_TARIFFS","s50":0.05,"s10":0.233,"test50":0.0,"q":[0.0,0.0,0.0,0.061,0.266,0.077,0.0,0.0,0.0,0.0,0.0],"n":[0,0,0,1,5,1,0,0,0,0,0]},{"label":"Korea · Tariffs","cell":"KR_TRADE_TARIFFS","s50":0.042,"s10":0.099,"test50":0.0,"q":[0.0,0.0,0.0,0.0,0.0,0.338,0.0,0.0,0.0,0.0,0.0],"n":[0,0,0,0,0,1,0,0,0,0,0]},{"label":"Japan · Monetary","cell":"JP_MONETARY","s50":0.031,"s10":0.084,"test50":0.194,"q":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.242,0.359,0.2,0.016],"n":[0,0,0,0,0,0,0,1,3,2,1]}],"all":{"50":[{"label":"US · Monetary","s":0.939},{"label":"Global · Geopolitics","s":0.767},{"label":"US · Fiscal-political","s":0.685},{"label":"US · Geopolitics","s":0.526},{"label":"China · Geopolitics","s":0.331},{"label":"US · Tariffs","s":0.308},{"label":"US · Inflation","s":0.25},{"label":"Korea · Fiscal-political","s":0.226},{"label":"China · Tariffs","s":0.199},{"label":"Euro area · Fiscal-political","s":0.076},{"label":"UK · Fiscal-political","s":0.076},{"label":"Mexico · Tariffs","s":0.061},{"label":"Canada · Tariffs","s":0.05},{"label":"Korea · Tariffs","s":0.042},{"label":"Japan · Monetary","s":0.031},{"label":"Euro area · Tariffs","s":0.021},{"label":"Australia · Fiscal-political","s":0.019},{"label":"Taiwan · Tariffs","s":0.017},{"label":"Australia · Tariffs","s":0.017},{"label":"Japan · Fiscal-political","s":0.013},{"label":"Brazil · Tariffs","s":0.01},{"label":"Euro area · Monetary","s":0.01},{"label":"UK · Monetary","s":0.008},{"label":"Brazil · Inflation","s":0.008},{"label":"Japan · Tariffs","s":0.006},{"label":"UK · Geopolitics","s":0.002},{"label":"Switzerland · Geopolitics","s":0.0},{"label":"Canada · Monetary","s":0.0},{"label":"Taiwan · Fiscal-political","s":0.0},{"label":"Euro area · Geopolitics","s":0.0},{"label":"HU · Fiscal-political","s":0.0},{"label":"Norway · Geopolitics","s":0.0}],"10":[{"label":"US · Monetary","s":0.998},{"label":"Global · Geopolitics","s":0.969},{"label":"US · Fiscal-political","s":0.914},{"label":"China · Geopolitics","s":0.746},{"label":"US · Geopolitics","s":0.642},{"label":"US · Tariffs","s":0.53},{"label":"US · Inflation","s":0.53},{"label":"China · Tariffs","s":0.367},{"label":"Korea · Fiscal-political","s":0.344},{"label":"UK · Fiscal-political","s":0.314},{"label":"Euro area · Fiscal-political","s":0.31},{"label":"Canada · Tariffs","s":0.233},{"label":"Mexico · Tariffs","s":0.191},{"label":"Euro area · Monetary","s":0.149},{"label":"India · Tariffs","s":0.128},{"label":"Korea · Tariffs","s":0.099},{"label":"Japan · Monetary","s":0.084},{"label":"Japan · Tariffs","s":0.082},{"label":"Japan · Fiscal-political","s":0.05},{"label":"Australia · Tariffs","s":0.036},{"label":"Euro area · Tariffs","s":0.034},{"label":"TH · Fiscal-political","s":0.034},{"label":"Taiwan · Tariffs","s":0.025},{"label":"UK · Monetary","s":0.021},{"label":"Brazil · Tariffs","s":0.019},{"label":"Australia · Fiscal-political","s":0.019},{"label":"UK · Geopolitics","s":0.017},{"label":"Brazil · Inflation","s":0.011},{"label":"UK · Tariffs","s":0.01},{"label":"Australia · Monetary","s":0.006},{"label":"Canada · Fiscal-political","s":0.006},{"label":"Canada · Monetary","s":0.002},{"label":"Euro area · Geopolitics","s":0.002},{"label":"Mexico · Fiscal-political","s":0.0},{"label":"CO · Fiscal-political","s":0.0},{"label":"Sweden · Monetary","s":0.0},{"label":"Switzerland · Monetary","s":0.0},{"label":"Norway · Geopolitics","s":0.0},{"label":"HU · Fiscal-political","s":0.0},{"label":"Brazil · Monetary","s":0.0},{"label":"Taiwan · Fiscal-political","s":0.0},{"label":"India · Inflation","s":0.0},{"label":"Mexico · Inflation","s":0.0},{"label":"China · Inflation","s":0.0},{"label":"Switzerland · Geopolitics","s":0.0},{"label":"Norway · Monetary","s":0.0},{"label":"Mexico · Monetary","s":0.0},{"label":"Japan · Inflation","s":0.0},{"label":"UK · Inflation","s":0.0},{"label":"New Zealand · Monetary","s":0.0},{"label":"CO · Monetary","s":0.0},{"label":"ZA · Inflation","s":0.0},{"label":"Canada · Geopolitics","s":0.0}]},"gate":0.6},"s5a":{"horizons":["Same day","+1 day","+5 days","+20 days"],"mon":[4.02,0.75,1.02,-0.46],"fis":[0.33,0.93,1.92,3.35]},"s5b":{"hours":[-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6],"mon":{"pm":{"t":[-1.31,1.41,-0.82,1.48,-1.38,1.3,5.8,2.64,1.63,-0.06,0.13,-0.9,-1.33],"n":[143,143,146,145,149,150,170,161,155,152,152,146,153]},"fx":{"t":[-0.62,0.47,-1.38,0.96,0.46,1.49,2.5,0.61,-0.21,-0.05,0.6,1.5,-0.82],"n":[153,153,157,157,158,167,212,168,165,166,167,168,167]}},"fis":{"pm":{"t":[0.28,-0.45,0.82,-0.48,0.18,0.11,1.05,1.3,0.51,-0.74,-1.18,0.64,-0.72],"n":[105,100,104,106,109,106,170,110,106,109,106,100,111]},"fx":{"t":[0.1,0.73,-1.83,-0.51,0.39,0.11,-1.53,-0.2,0.15,0.25,0.23,-0.67,0.87],"n":[226,226,225,230,228,234,297,238,230,234,226,229,228]}},"geo":{"pm":{"t":[-1.85,0.43,0.46,-0.07,0.2,-0.57,3.0,0.71,1.12,-0.9,-1.43,1.82,-0.32],"n":[138,134,135,135,138,135,170,139,136,135,132,127,136]},"fx":{"t":[0.93,-0.11,1.0,-0.14,2.14,0.77,1.03,-2.28,1.06,-0.63,1.23,0.72,-0.22],"n":[160,159,161,163,168,171,204,169,166,159,158,159,159]}}},"s5c":{"rows":["US monetary","US fiscal-political","Global geopolitics"],"london":{"t":[0.0,0.59,-0.62],"n":1278},"ny":{"t":[1.27,-0.64,0.74],"n":1272}},"s5ex":{"d":-5.0,"usd":-0.8,"eur":1.1,"jpy":1.9,"chf":1.6}};</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.0/plotly.min.js"></script>
 <script>
-(function(){
-'use strict';
-const D = window.DECK_DATA;
-const $ = (s, r) => (r || document).querySelector(s);
-const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
-const W = 1920, H = 1080;
-const stage = $('#stage');
-const slides = $$('section.slide', stage);
-const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+/* ---------- data (from results/, checked by presentation/build_piero_slides.py) ---------- */
+const COV = [ // share of weekdays covered 2024-25, USD 50k (results/coverage_cells.csv)
+  ["US · Monetary",93.9,"--c-mon"],["Global · Geopolitics",76.7,"--c-geo"],["US · Fiscal-political",68.5,"--c-fis"],
+  ["US · Geopolitics",52.6],["China · Geopolitics",33.1],["US · Tariffs",30.8],["US · Inflation",25.0],
+  ["Euro area · Fiscal",7.6],["UK · Fiscal",7.6],["Japan · Monetary",3.1]];
+const DAILY = {mon:[4.02,0.75,1.02], fis:[0.33,0.93,1.92]}; // results/strategy_a/diagnostics.csv, A1, horizons 0/1/5
+const HOURLY = [-1.31,1.41,-0.82,1.48,-1.38,1.30,5.80,2.64,1.63,-0.06,0.13,-0.90,-1.33]; // results/leadlag/event_study.csv, FX top 1% -> PM US/MONETARY, t = mean/se
+const WEEKEND = [["US monetary",0.00,"--c-mon"],["US fiscal",0.59,"--c-fis"],["Global geopolitics",-0.62,"--c-geo"]]; // results/weekend/weekend_gap_regressions.csv, A1+GEO, London reopening
+
+/* ---------- deck ---------- */
+const stage = document.getElementById('stage'), slides = [...document.querySelectorAll('.slide')];
 let cur = 0;
-
-/* ---------- formatting ---------- */
-function fmt(x, d, plus){
-  d = d || 0;
-  const s = Math.abs(x).toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
-  const zero = Number(s.replace(/,/g, '')) === 0;
-  return (x < 0 && !zero ? '−' : plus && x > 0 && !zero ? '+' : '') + s;
-}
-const pct = (p) => fmt(100 * p, 100 * p < 10 ? 1 : 0) + '%';
-const qlabel = (q) => q.slice(4) + ' ' + q.slice(0, 4);
-const qtick = (q) => q.endsWith('Q1') ? 'Q1<br>' + q.slice(0, 4) : q.slice(4);
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const shortDate = (iso) => MONTHS[+iso.slice(5, 7) - 1] + ' ' + (+iso.slice(8, 10));
-
-/* ---------- stage scaling and navigation ---------- */
-function fit(){
-  const s = Math.min(innerWidth / W, innerHeight / H);
-  stage.style.transform = 'translate(' + (innerWidth - W * s) / 2 + 'px,' + (innerHeight - H * s) / 2 + 'px) scale(' + s + ')';
-}
+function fit(){ const k = Math.min(innerWidth/1920, innerHeight/1080);
+  stage.style.transform = `translate(${(innerWidth-1920*k)/2}px,${(innerHeight-1080*k)/2}px) scale(${k})`; }
+function go(i){ cur = Math.max(0, Math.min(slides.length-1, i));
+  slides.forEach((s,j)=>s.classList.toggle('on', j===cur));
+  document.getElementById('count').textContent = `${cur+1} / ${slides.length}`;
+  document.getElementById('bar').style.width = `${(cur+1)/slides.length*100}%`;
+  try { history.replaceState(null,'','#'+(cur+1)); } catch(e) {} }
 addEventListener('resize', fit);
-fit();
-
-function go(i){
-  i = Math.max(0, Math.min(slides.length - 1, i));
-  cur = i;
-  slides.forEach((s, k) => { const on = k === i; s.classList.toggle('on', on); s.inert = !on; s.setAttribute('aria-hidden', on ? 'false' : 'true'); });
-  const s = slides[i];
-  $('#count').textContent = (i + 1) + ' / ' + slides.length;
-  $('#foot-who').textContent = [s.dataset.presenter, s.dataset.title].filter(Boolean).join(' · ');
-  $('#progress-bar').style.width = (100 * (i + 1) / slides.length) + '%';
-  if (!$('#notes').hidden) showNotes();
-  try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) { /* sandboxed */ }
-}
-$('#prev').addEventListener('click', () => go(cur - 1));
-$('#next').addEventListener('click', () => go(cur + 1));
-
-function showNotes(){
-  const s = slides[cur], a = $('aside.notes', s), nx = slides[cur + 1];
-  $('#notes-title').textContent = 'Slide ' + (cur + 1) + ' of ' + slides.length + ' · ' + (s.dataset.title || '');
-  $('#notes-meta').textContent = [s.dataset.presenter, s.dataset.seconds ? s.dataset.seconds + ' s' : ''].filter(Boolean).join(' · ');
-  $('#notes-body').innerHTML = a ? a.innerHTML : '<p>No notes for this slide.</p>';
-  $('#notes-next').textContent = nx ? 'Next: ' + (nx.dataset.title || 'slide ' + (cur + 2)) + (nx.dataset.presenter ? ' (' + nx.dataset.presenter + ')' : '') : 'Last slide';
-}
-function toggleNotes(force){
-  const n = $('#notes');
-  n.hidden = force === undefined ? !n.hidden : !force;
-  if (!n.hidden) showNotes();
-}
-$('#notes-close').addEventListener('click', () => toggleNotes(false));
-function toggleFull(){
-  try {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
-  } catch (e) { /* not allowed here */ }
-}
-
-addEventListener('keydown', (e) => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
-  const t = e.target, k = e.key;
-  const inRange = t && t.matches && t.matches('input[type=range]');
-  const onBtn = t && t.closest && t.closest('button,[tabindex]');
-  if (k === 'n' || k === 'N') { e.preventDefault(); toggleNotes(); return; }
-  if (k === 'f' || k === 'F') { toggleFull(); return; }
-  if (k === 'Escape') { toggleNotes(false); return; }
-  if (inRange && /^(Arrow|Page|Home|End)/.test(k)) return;
-  if (onBtn && (k === ' ' || k === 'Enter')) return;
-  if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ') { e.preventDefault(); go(cur + (k === ' ' && e.shiftKey ? -1 : 1)); }
-  else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp') { e.preventDefault(); go(cur - 1); }
-  else if (k === 'Home') { e.preventDefault(); go(0); }
-  else if (k === 'End') { e.preventDefault(); go(slides.length - 1); }
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (['ArrowRight','PageDown',' '].includes(e.key)) { e.preventDefault(); go(cur+1); }
+  if (['ArrowLeft','PageUp'].includes(e.key)) { e.preventDefault(); go(cur-1); }
+  if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(()=>{}); }
 });
-/* After a mouse click on a control, hand the keys back to slide navigation. */
-document.addEventListener('pointerup', (e) => {
-  if (e.pointerType !== 'mouse') return;
-  const el = e.target.closest && e.target.closest('button,input[type=range],[tabindex]');
-  if (el) setTimeout(() => el.blur(), 0);
-});
-let tx = null;
-stage.addEventListener('touchstart', (e) => { tx = e.target.closest('input,button,.chart') ? null : e.touches[0].clientX; }, {passive:true});
-stage.addEventListener('touchend', (e) => {
-  if (tx === null) return;
-  const dx = e.changedTouches[0].clientX - tx; tx = null;
-  if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
-});
+document.getElementById('prev').onclick = () => go(cur-1);
+document.getElementById('next').onclick = () => go(cur+1);
+fit(); go((parseInt(location.hash.slice(1)) || 1) - 1);
 
-/* ---------- tooltip for HTML elements ---------- */
-const tip = $('#tip');
-function placeTip(e){
-  const r = tip.getBoundingClientRect();
-  let x = e.clientX + 14, y = e.clientY + 16;
-  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
-  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 16;
-  tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
+/* ---------- helpers ---------- */
+const NS = 'http://www.w3.org/2000/svg';
+function S(tag, a, p){ const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+function T(p, x, y, txt, a){ const t = S('text', Object.assign({x, y, 'font-size':20, fill:'var(--muted)'}, a||{}), p); t.textContent = txt; return t; }
+function seg(id, cb){ const el = document.getElementById(id);
+  el.querySelectorAll('button').forEach(b => b.onclick = () => {
+    el.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); cb(b.dataset.v); }); }
+
+/* ---------- slide 2: UIP toggle ---------- */
+function uip(v){
+  const svg = document.getElementById('uipSvg'); svg.innerHTML = '';
+  const gap = 300, dep = v === 'uip' ? 300 : 150;
+  T(svg, 0, 34, 'i − i*', {'font-size':19}); S('rect', {x:110, y:14, width:gap, height:30, rx:4, fill:'var(--navy)'}, svg);
+  T(svg, 0, 94, 'Δs', {'font-size':19}); S('rect', {x:110, y:74, width:dep, height:30, rx:4, fill:'var(--gray)'}, svg);
+  T(svg, 0, 144, v === 'uip' ? 'rx = 0' : 'rx > 0', {'font-size':22, fill:'var(--ink)', 'font-weight':600});
+  if (v !== 'uip') { S('rect', {x:110+dep, y:74, width:gap-dep, height:30, rx:4, fill:'var(--good-soft)', stroke:'var(--good)', 'stroke-dasharray':'5 4'}, svg);
+    T(svg, 110+dep+12, 95, 'carry earned', {'font-size':17, fill:'var(--good)'}); }
+  document.getElementById('uipTxt').innerHTML = v === 'uip'
+    ? 'UIP: the high-rate currency falls by exactly the rate gap. <b>Carry earns nothing.</b>'
+    : 'In the data it falls less on average. <b>Carry pays</b>, as compensation for crashes in global sell-offs.';
 }
-document.addEventListener('pointerover', (e) => {
-  const el = e.target.closest && e.target.closest('[data-tip]');
-  if (!el) return;
-  tip.textContent = el.dataset.tip; tip.hidden = false; placeTip(e);
-});
-document.addEventListener('pointermove', (e) => { if (!tip.hidden) placeTip(e); });
-document.addEventListener('pointerout', (e) => {
-  const el = e.target.closest && e.target.closest('[data-tip]');
-  if (el && !el.contains(e.relatedTarget)) tip.hidden = true;
-});
+seg('uipSeg', uip); uip('uip');
 
-/* ---------- slide 1: fork ---------- */
-$$('#fork .fk-br').forEach((b) => b.addEventListener('click', () => {
-  const on = b.getAttribute('aria-pressed') !== 'true';
-  $$('#fork .fk-br').forEach((o) => o.setAttribute('aria-pressed', String(on && o === b)));
-  $('#fork').dataset.sel = on ? b.dataset.b : '';
-}));
+/* ---------- slide 2: dominance toggle ---------- */
+function dom(v){
+  document.getElementById('domChain').innerHTML = v === 'md'
+    ? '<span>Deficit ↑</span><i>↓</i><span>Expected Fed rates ↑</span><i>↓</i><span class="up">USD ↑</span>'
+    : '<span>Deficit ↑</span><i>↓</i><span>Debt risk premium ↑</span><i>↓</i><span class="dn">USD ↓</span>';
+  document.getElementById('domTxt').innerHTML = v === 'md'
+    ? 'Normal times: the central bank answers the deficit with higher rates.'
+    : 'High debt, lost credibility: yields rise but the currency falls (UK 2022, US spring 2025).';
+}
+seg('domSeg', dom); dom('md');
 
-/* ---------- slide 2: regime toggle ---------- */
-$$('#regime button').forEach((b) => b.addEventListener('click', () => {
-  const r = b.dataset.r, chain = $('#chain');
-  if (chain.dataset.regime === r) return;
-  $$('#regime button').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
-  const boxes = $$('.cb[data-m]', chain);
-  const swap = () => { boxes.forEach((x) => { x.textContent = x.dataset[r]; }); chain.dataset.regime = r; };
-  if (reduce.matches) { swap(); return; }
-  const flips = $$('.cb.flip', chain);
-  flips.forEach((x) => { x.classList.remove('anim'); void x.offsetWidth; x.classList.add('anim'); });
-  boxes.filter((x) => !x.classList.contains('flip')).forEach((x) => { x.textContent = x.dataset[r]; });
-  setTimeout(() => { flips.forEach((x) => { x.textContent = x.dataset[r]; }); chain.dataset.regime = r; }, 220);
-}));
+/* ---------- slide 3: pipeline ---------- */
+const STEPS = [
+  ['Fixed rules tag each contract with a <b>theme</b>, a <b>country</b> and a <b>direction</b>.',
+   '"Will the Fed cut in December?"<br>→ <b>US · Monetary · dovish (−1)</b>'],
+  ['One price per day: the <b>last trade before 16:00 London</b>. No trade in the last 6 hours: skipped that day.',
+   'We trade at the New York close, 6 hours later.<br>No look-ahead.'],
+  ['"By-date" contracts lose value every day nothing happens. We use the <b>implied risk per month</b> (hazard rate) instead of the price.',
+   'λ = −ln(1 − p) / time left'],
+  ['Daily change ÷ the contract\'s <b>usual daily move</b>, signed so that + means hawkish or escalation.',
+   'A 2-point move in a calm contract<br>counts more than in a jumpy one.'],
+  ['<b>Volume-weighted average</b> of all contracts with the same theme and country: one index per day.',
+   'US monetary · US fiscal · global geopolitics ·<br>and every other country × theme.']];
+function step(i){
+  document.querySelectorAll('#steps .step').forEach((b,j) => b.setAttribute('aria-pressed', j === i));
+  document.getElementById('stTxt').innerHTML = STEPS[i][0];
+  document.getElementById('stEx').innerHTML = STEPS[i][1];
+  const vis = document.getElementById('stVis'); vis.innerHTML = '';
+  if (i === 2) hazard(vis);
+}
+document.querySelectorAll('#steps .step').forEach(b => b.onclick = () => step(+b.dataset.i));
+step(0);
 
-/* ---------- slide 3: funnel, pipeline, examples ---------- */
-(function(){
-  const n = D.s3, max = n.all, maxPx = 860;
-  const tips = {
-    all: 'All markets with trades: ' + fmt(n.all) + '\nKalshi ' + fmt(n.kalshi) + ' · Polymarket ' + fmt(n.poly) + '\nVolume: Kalshi $' + fmt(n.bn_kalshi, 2) + 'bn · Polymarket $' + fmt(n.bn_poly, 2) + 'bn',
-    macro: fmt(n.macro) + ' markets on a macro theme\n(monetary, inflation, fiscal-political, tariffs, geopolitics)',
-    usable: fmt(n.usable) + ' macro markets with a signed direction\nor a bracket of a partition',
-    panel: fmt(n.panel) + ' contracts in the daily panel\n(each bracket set counts once, as an expected value)',
-    pass: fmt(n.pass) + ' country × theme cells pass the coverage gate'
+function hazard(host){
+  host.innerHTML = '<div class="hz"><div class="row"><span>Risk per month</span><input type="range" id="hzR" min="2" max="20" value="10"><b id="hzV" style="color:var(--ink)">10%</b></div><svg id="hzSvg" viewBox="0 0 760 330" width="100%" role="img" aria-label="Price falls, hazard stays flat"></svg></div>';
+  const draw = () => {
+    const h = +document.getElementById('hzR').value / 100; document.getElementById('hzV').textContent = Math.round(h*100) + '%';
+    const svg = document.getElementById('hzSvg'); svg.innerHTML = '';
+    const panel = (x0, title, f, ymax, fmt, col) => {
+      const W = 330, H = 220, y0 = 60, x = m => x0 + (12 - m) / 12 * W, y = v => y0 + H - v / ymax * H;
+      T(svg, x0, 28, title, {'font-size':20, fill:'var(--ink)', 'font-weight':600});
+      S('line', {x1:x0, x2:x0+W, y1:y0+H, y2:y0+H, stroke:'var(--faint)'}, svg);
+      let d = ''; for (let m = 12; m >= 0.25; m -= 0.25) d += (d ? 'L' : 'M') + x(m).toFixed(1) + ',' + y(f(m)).toFixed(1);
+      S('path', {d, fill:'none', stroke:col, 'stroke-width':4, 'stroke-linecap':'round'}, svg);
+      T(svg, x0, y0+H+30, '12 months left', {'font-size':16}); T(svg, x0+W, y0+H+30, 'deadline', {'font-size':16, 'text-anchor':'end'});
+      T(svg, x(12)+4, y(f(12))-12, fmt(f(12)), {'font-size':18, fill:'var(--ink)'});
+      T(svg, x(1), y(f(1))-14, fmt(f(1)), {'font-size':18, fill:'var(--ink)', 'text-anchor':'end'});
+    };
+    panel(0, 'Price (probability)', m => 1 - Math.exp(-h*m), 1, v => Math.round(v*100) + '%', 'var(--bad)');
+    panel(420, 'Hazard rate', m => h, 0.25, v => Math.round(v*100) + '%/mo', 'var(--good)');
   };
-  $$('#funnel .fr').forEach((row) => {
-    const k = row.dataset.f, bar = $('.bar', row);
-    if (bar) bar.style.width = (maxPx * n[k] / max) + 'px';
-    row.dataset.tip = tips[k];
+  document.getElementById('hzR').oninput = draw; draw();
+}
+
+/* ---------- slide 4: coverage bars with gate slider ---------- */
+function cov(g){
+  const svg = document.getElementById('covSvg'); svg.innerHTML = '';
+  const L = 290, W = 640, rowH = 56, x = v => L + v / 100 * W;
+  [0,25,50,75,100].forEach(v => { S('line', {x1:x(v), x2:x(v), y1:0, y2:rowH*COV.length, stroke:'var(--rule)'}, svg);
+    T(svg, x(v), rowH*COV.length + 28, v + '%', {'font-size':17, 'text-anchor':'middle', fill:'var(--faint)'}); });
+  let n = 0;
+  COV.forEach((c, i) => {
+    const pass = c[1] >= g; if (pass) n++;
+    const y = i * rowH;
+    T(svg, L - 16, y + 35, c[0], {'font-size':20, 'text-anchor':'end', fill: pass ? 'var(--ink)' : 'var(--muted)', 'font-weight': pass ? 600 : 400});
+    S('rect', {x:L, y:y+14, width:Math.max(c[1]/100*W, 3), height:28, rx:4, fill: pass ? `var(${c[2] || '--navy'})` : 'var(--gray)'}, svg);
+    T(svg, x(c[1]) + 10, y + 35, c[1].toFixed(1) + '%', {'font-size':18, fill:'var(--muted)'});
   });
-  const ex = $('#examples');
-  D.examples.forEach((e) => {
-    const li = document.createElement('li'); li.className = 'ex';
-    const dir = e.dir === 0 ? '<span class="tg x">no direction → excluded</span>'
-      : '<span class="tg">' + (e.dir > 0 ? '+1' : '−1') + ' (' + e.meaning + ')</span>';
-    li.innerHTML = '<q></q><span class="to">→</span><span class="tags"><span class="tg"></span><span class="tg"></span>' + dir + '<span class="rl"></span></span>';
-    $('q', li).textContent = e.title;
-    const tg = $$('.tg', li); tg[0].textContent = e.zone; tg[1].textContent = e.theme;
-    $('.rl', li).textContent = 'rule: ' + e.rule;
-    ex.appendChild(li);
-  });
-  const NAMES = ['Classify', 'Snapshot', 'Value', 'Standardise', 'Index'];
-  let step = 3;
-  function sel(k){
-    step = Math.max(1, Math.min(5, k));
-    $$('#pipe button').forEach((b) => b.setAttribute('aria-selected', String(+b.dataset.step === step)));
-    $$('.detail .dp').forEach((p) => { p.hidden = +p.dataset.step !== step; });
-    $('#dp-label').textContent = 'Step ' + step + ' of 5 · ' + NAMES[step - 1];
+  S('line', {x1:x(g), x2:x(g), y1:-4, y2:rowH*COV.length+4, stroke:'var(--ink)', 'stroke-width':3}, svg);
+  document.getElementById('covN').textContent = n; document.getElementById('covG').textContent = g;
+}
+document.getElementById('covR').oninput = e => cov(+e.target.value); cov(60);
+
+/* ---------- slide 5: three tests ---------- */
+function band(svg, y, x1, x2, lo, hi){ S('rect', {x:x1, y:y(hi), width:x2-x1, height:y(lo)-y(hi), fill:'var(--bg)', opacity:.7}, svg); }
+function bandKey(svg, x, y){ S('rect', {x, y, width:16, height:16, rx:3, fill:'var(--bg)', stroke:'var(--faint)'}, svg); T(svg, x+26, y+14, 'not significant (|t| < 2)', {'font-size':18}); }
+function finding(v){
+  const svg = document.getElementById('fSvg'); svg.innerHTML = '';
+  const L = 80, R = 980, top = 30, H = 450;
+  const axis = (lo, hi, step) => { const y = t => top + (hi - t) / (hi - lo) * H;
+    for (let t = lo; t <= hi + 1e-9; t += step) { S('line', {x1:L, x2:R, y1:y(t), y2:y(t), stroke: t === 0 ? 'var(--faint)' : 'var(--rule)'}, svg);
+      T(svg, L - 14, y(t) + 6, t, {'font-size':18, 'text-anchor':'end', fill:'var(--faint)'}); }
+    T(svg, L - 14, top - 14, 't-stat', {'font-size':17, 'text-anchor':'end', fill:'var(--faint)'}); return y; };
+  let k, txt;
+  if (v === 'd') {
+    const y = axis(-1, 5, 1); band(svg, y, L, R, -1, 2);
+    const groups = ['Same day', '+1 day', '+5 days'], gw = (R - L) / 3;
+    groups.forEach((g, i) => {
+      const cx = L + gw * (i + .5);
+      [['mon', '--c-mon', -40], ['fis', '--c-fis', 40]].forEach(([key, col, dx]) => {
+        const val = DAILY[key][i]; S('rect', {x:cx+dx-30, y:y(Math.max(val,0)), width:60, height:Math.abs(y(val)-y(0)), rx:5, fill:`var(${col})`}, svg);
+        T(svg, cx+dx, y(val) - 12, val.toFixed(1), {'font-size':22, 'text-anchor':'middle', fill:'var(--ink)', 'font-weight':600}); });
+      T(svg, cx, top + H + 40, g, {'font-size':22, 'text-anchor':'middle', fill:'var(--ink)'});
+    });
+    S('rect', {x:L, y:top+H+60, width:16, height:16, rx:3, fill:'var(--c-mon)'}, svg); T(svg, L+26, top+H+74, 'US monetary', {'font-size':18});
+    S('rect', {x:L+200, y:top+H+60, width:16, height:16, rx:3, fill:'var(--c-fis)'}, svg); T(svg, L+226, top+H+74, 'US fiscal', {'font-size':18});
+    bandKey(svg, L+380, top+H+60);
+    k = 'Daily · regression of G10 FX returns on our indices';
+    txt = 'Fed news moves both markets <b>the same day</b> (t = 4.0). The next day, nothing (t = 0.75). Example: Aug 2, 2024, weak jobs report: cut odds jump and the dollar falls 0.8% that same day.';
+  } else if (v === 'h') {
+    const y = axis(-2, 6, 2); band(svg, y, L, R, -2, 2);
+    const x = h => L + (h + 6) / 12 * (R - L);
+    S('line', {x1:x(0), x2:x(0), y1:top, y2:top+H, stroke:'var(--ink)', 'stroke-width':1.5}, svg);
+    T(svg, x(0) - 12, top + 22, 'big dollar move', {'font-size':18, 'text-anchor':'end', fill:'var(--ink)'});
+    bandKey(svg, L, top+H+60);
+    let d = ''; HOURLY.forEach((t, i) => d += (d ? 'L' : 'M') + x(i-6) + ',' + y(t));
+    S('path', {d, fill:'none', stroke:'var(--c-mon)', 'stroke-width':4, 'stroke-linejoin':'round'}, svg);
+    HOURLY.forEach((t, i) => S('circle', {cx:x(i-6), cy:y(t), r:6, fill:'var(--c-mon)', stroke:'var(--surface)', 'stroke-width':2}, svg));
+    T(svg, x(0) + 14, y(5.8) + 6, '5.8', {'font-size':22, fill:'var(--ink)', 'font-weight':600});
+    T(svg, x(1) + 14, y(2.64) + 6, '2.6', {'font-size':22, fill:'var(--ink)', 'font-weight':600});
+    [-6,-3,0,3,6].forEach(h => T(svg, x(h), top + H + 40, (h > 0 ? '+' : '') + h + 'h', {'font-size':20, 'text-anchor':'middle', fill:'var(--ink)'}));
+    k = 'Hourly · response of the Fed index around the 1% largest dollar moves';
+    txt = 'Nothing <b>before</b> the dollar moves. The Fed odds react in the same hour and are <b>still adjusting one hour later</b>. FX moves first or together.';
+  } else {
+    const lo = -2.5, hi = 2.5, xs = t => L + 200 + (t - lo) / (hi - lo) * (R - L - 200);
+    S('rect', {x:xs(-2), y:top, width:xs(2)-xs(-2), height:H-60, fill:'var(--bg)', opacity:.7}, svg);
+    T(svg, xs(0), top + H - 30, 'not significant (|t| < 2)', {'font-size':17, 'text-anchor':'middle', fill:'var(--muted)'});
+    [-2,-1,0,1,2].forEach(t => { S('line', {x1:xs(t), x2:xs(t), y1:top, y2:top+H-60, stroke: t === 0 ? 'var(--faint)' : 'var(--rule)'}, svg);
+      T(svg, xs(t), top + H, t, {'font-size':18, 'text-anchor':'middle', fill:'var(--faint)'}); });
+    WEEKEND.forEach(([name, t, col], i) => { const yy = top + 60 + i * 110;
+      T(svg, L + 180, yy + 26, name, {'font-size':22, 'text-anchor':'end', fill:'var(--ink)'});
+      S('rect', {x:Math.min(xs(0), xs(t)), y:yy, width:Math.max(Math.abs(xs(t)-xs(0)), 4), height:40, rx:5, fill:`var(${col})`}, svg);
+      T(svg, xs(t) + (t >= 0 ? 12 : -12), yy + 28, t.toFixed(2), {'font-size':20, 'text-anchor': t >= 0 ? 'start' : 'end', fill:'var(--ink)', 'font-weight':600}); });
+    T(svg, xs(0), top + H + 34, 't-stat', {'font-size':17, 'text-anchor':'middle', fill:'var(--faint)'});
+    k = 'Weekend · FX closed, prediction markets open';
+    txt = 'If the odds knew something, their weekend move would predict Monday\'s reopening. Over <b>1,278 pair-weekends</b>, it does not.';
   }
-  $$('#pipe button').forEach((b) => b.addEventListener('click', () => sel(+b.dataset.step)));
-  $('#dp-prev').addEventListener('click', () => sel(step - 1));
-  $('#dp-next').addEventListener('click', () => sel(step + 1));
-  sel(3);
-})();
-
-/* ---------- slide 4: controls ---------- */
-const st = {vol: '50', cellB: 'mon', reopen: 'london'};
-function gateState(){
-  const g = +$('#gate').value / 100;
-  const pass = (s) => s >= g - 1e-9;
-  const all = D.s4.all[st.vol].filter((c) => pass(c.s));
-  $('#gate-o').textContent = $('#gate').value + '%';
-  $('#pass-n').textContent = all.length;
-  $('#pass-list').textContent = all.map((c) => c.label).join(', ') || 'none';
-  return {g, pass};
+  document.getElementById('fK').textContent = k; document.getElementById('fTxt').innerHTML = txt;
 }
-$('#gate').addEventListener('input', () => { gateState(); heatAnn(); });
-$$('#vol button').forEach((b) => b.addEventListener('click', () => {
-  st.vol = b.dataset.v;
-  $$('#vol button').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
-  gateState(); heatAnn();
-}));
-
-/* ---------- slide 5: toggles ---------- */
-const PM_NAME = {mon: ['Fed odds after a big dollar move', 'Dollar after a big move in Fed odds'],
-  fis: ['Fiscal odds after a big dollar move', 'Dollar after a big move in fiscal odds'],
-  geo: ['Geopolitical odds after a big dollar move', 'Dollar after a big move in geopolitical odds']};
-$$('#cellb button').forEach((b) => b.addEventListener('click', () => {
-  st.cellB = b.dataset.c;
-  $$('#cellb button').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
-  ch5b();
-}));
-$$('#reopen button').forEach((b) => b.addEventListener('click', () => {
-  st.reopen = b.dataset.o;
-  $$('#reopen button').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
-  $('#n-5c').textContent = fmt(D.s5c[st.reopen].n);
-  ch5c();
-}));
-$('#ex-day').dataset.tip = '2024-08-02, close to close:\nG10 basket vs USD ' + fmt(-D.s5ex.usd, 1, true) + '%\nEUR ' + fmt(D.s5ex.eur, 1, true) +
-  '%  JPY ' + fmt(D.s5ex.jpy, 1, true) + '%  CHF ' + fmt(D.s5ex.chf, 1, true) + '%\nUS monetary index ' + fmt(D.s5ex.d, 1) + ' sd';
-
-/* ---------- slide 6: links and hover ---------- */
-function drawLinks(){
-  const body = $('#s6-body'), svg = $('#links');
-  const cards = {A: $('.strat[data-s="A"]', body), B: $('.strat[data-s="B"]', body)};
-  const off = (el) => { let x = 0, y = 0; for (let e = el; e && e !== body; e = e.offsetParent) { x += e.offsetLeft; y += e.offsetTop; } return {x, y}; };
-  svg.setAttribute('viewBox', '0 0 ' + body.offsetWidth + ' ' + body.offsetHeight);
-  svg.innerHTML = $$('.chip', body).map((c) => {
-    const p = off(c), card = cards[c.dataset.for], q = off(card);
-    const x = p.x + c.offsetWidth / 2;
-    return '<line data-for="' + c.dataset.for + '" x1="' + x + '" y1="' + (p.y + c.offsetHeight) + '" x2="' + x + '" y2="' + q.y + '"/>';
-  }).join('');
-}
-$$('#s6-body .strat').forEach((card) => {
-  const on = () => { $('#s6-body').classList.add('hov-' + card.dataset.s); };
-  const off = () => { $('#s6-body').classList.remove('hov-' + card.dataset.s); };
-  card.addEventListener('mouseenter', on); card.addEventListener('mouseleave', off);
-  card.addEventListener('focus', on); card.addEventListener('blur', off);
-});
-
-/* ---------- charts ---------- */
-const PLOTLY_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.0/plotly.min.js';
-let P = window.Plotly;
-const CFG = {displayModeBar: false, responsive: false, scrollZoom: false, doubleClick: false, showTips: false};
-function tok(){
-  const s = getComputedStyle(document.documentElement), g = (n) => s.getPropertyValue(n).trim();
-  return {ink: g('--ink'), muted: g('--muted'), faint: g('--faint'), rule: g('--rule'), surface: g('--surface'), noise: g('--noise'),
-    navy: g('--navy'), good: g('--good'), bad: g('--bad'), mon: g('--c-mon'), fis: g('--c-fis'), geo: g('--c-geo'),
-    seq0: g('--seq-0'), seq1: g('--seq-1'), sans: g('--sans'), mono: g('--mono'), display: g('--display')};
-}
-let T = tok();
-function merge(a, b){
-  for (const k in b) {
-    if (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object') merge(a[k], b[k]);
-    else a[k] = b[k];
-  }
-  return a;
-}
-function axis(y){
-  return {fixedrange: true, showgrid: !!y, gridcolor: T.rule, gridwidth: 1, zeroline: false, showline: !y, linecolor: T.rule,
-    ticks: '', tickfont: {family: T.mono, size: 14, color: T.muted}, automargin: false,
-    title: {font: {family: T.sans, size: 14, color: T.muted}, standoff: 10}};
-}
-function layout(el, o){
-  return merge({width: el.clientWidth, height: el.clientHeight, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-    font: {family: T.sans, size: 15, color: T.muted}, margin: {l: 52, r: 12, t: 12, b: 44}, showlegend: false, dragmode: false,
-    hovermode: 'closest', hoverlabel: {bgcolor: T.surface, bordercolor: T.rule, font: {family: T.mono, size: 14, color: T.ink}, align: 'left'},
-    xaxis: axis(false), yaxis: axis(true)}, o || {});
-}
-const mark = (c) => '<span style="color:' + c + '">■</span>';
-function band(y0, y1, axisRef){
-  return axisRef === 'x'
-    ? {type: 'rect', xref: 'x', yref: 'paper', x0: y0, x1: y1, y0: 0, y1: 1, fillcolor: T.noise, line: {width: 0}, layer: 'below'}
-    : {type: 'rect', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0, y1, fillcolor: T.noise, line: {width: 0}, layer: 'below'};
-}
-
-function chS1(){
-  const el = $('#ch-s1'), s = D.s1, Q = s.quarters, last = Q.length - 1;
-  const cd = Q.map((q, i) => [qlabel(q) + (q === s.partial ? ' (to ' + shortDate(s.end) + ')' : ''),
-    fmt(s.seg.mon[i], 1), fmt(s.seg.fis[i], 1), fmt(s.seg.geo[i], 1), fmt(s.total[i], 1)]);
-  const ht = '<b>%{customdata[0]}</b><br>' + mark(T.mon) + ' US monetary  %{customdata[1]}<br>' + mark(T.fis) +
-    ' US fiscal-political  %{customdata[2]}<br>' + mark(T.geo) + ' Global geopolitics  %{customdata[3]}<br><b>Total  %{customdata[4]}</b> per day<extra></extra>';
-  const op = Q.map((q) => q === s.partial ? 0.45 : 1);
-  const data = D.cells.map((c) => ({type: 'bar', x: Q, y: s.seg[c.key], name: c.label, customdata: cd, hovertemplate: ht,
-    marker: {color: T[c.key], opacity: op, line: {color: T.surface, width: 2}}}));
-  const tot = (i) => ({x: Q[i], y: s.total[i], text: '<b>' + fmt(s.total[i], 1) + '</b>', showarrow: false, yanchor: 'bottom', yshift: 4,
-    font: {family: T.display, size: 19, color: T.ink}});
-  const ann = [tot(0), tot(last - 1),
-    {x: '2024Q4', y: s.total[3], text: 'US election', showarrow: true, arrowhead: 0, arrowwidth: 1.2, arrowcolor: T.faint, ax: 0, ay: -34,
-      font: {family: T.mono, size: 14, color: T.muted}},
-    {x: Q[last], y: s.total[last], text: 'to ' + shortDate(s.end), showarrow: false, yanchor: 'bottom', yshift: 4,
-      font: {family: T.mono, size: 12, color: T.faint}}];
-  P.react(el, data, layout(el, {barmode: 'stack', bargap: 0.28, barcornerradius: 4, margin: {l: 40, r: 6, t: 14, b: 50},
-    xaxis: {tickvals: Q, ticktext: Q.map(qtick)}, yaxis: {range: [0, 53], dtick: 10}, annotations: ann}), CFG);
-}
-
-function heatAnn(){
-  const el = $('#ch-heat');
-  if (!P || !el.data) return;
-  const {pass} = gateState(), rows = D.s4.rows, key = st.vol === '50' ? 's50' : 's10';
-  const ann = rows.map((r) => {
-    const ok = pass(r[key]);
-    return {x: 1, xref: 'paper', xanchor: 'left', xshift: 14, y: r.label, yref: 'y', showarrow: false, align: 'left',
-      font: {family: T.mono, size: 14, color: ok ? T.ink : T.faint},
-      text: fmt(100 * r[key]) + '%  ' + (ok ? '<span style="color:' + T.good + '"><b>✓ pass</b></span>' : '✗ fail')};
-  });
-  ann.push({x: 1, xref: 'paper', xanchor: 'left', xshift: 14, y: 1, yref: 'paper', yanchor: 'bottom', yshift: 6, showarrow: false,
-    text: '2024 to 2025, $' + st.vol + 'k', font: {family: T.mono, size: 12, color: T.muted}});
-  ann.push({x: 7.5, xref: 'x', y: 1, yref: 'paper', yanchor: 'bottom', yshift: 6, showarrow: false,
-    text: 'training  |  out of sample', font: {family: T.mono, size: 12, color: T.ink}});
-  const tt = rows.map((r) => pass(r[key]) ? '<b>' + r.label + '</b>' : r.label);
-  P.relayout(el, {annotations: ann, 'yaxis.ticktext': tt});
-}
-function chHeat(){
-  const el = $('#ch-heat'), s = D.s4, rows = s.rows, Q = s.quarters;
-  const y = rows.map((r) => r.label);
-  const data = [{type: 'heatmap', x: Q, y, z: rows.map((r) => r.q.map((v) => 100 * v)), zmin: 0, zmax: 100, showscale: false,
-    colorscale: [[0, T.seq0], [1, T.seq1]], xgap: 2, ygap: 2,
-    customdata: rows.map((r) => r.q.map((v, j) => [r.label, qlabel(Q[j]), fmt(100 * v), fmt(r.n[j])])),
-    hovertemplate: '<b>%{customdata[0]}</b><br>%{customdata[1]}<br>%{customdata[2]}% of weekdays covered<br>%{customdata[3]} eligible contracts<extra></extra>'}];
-  P.react(el, data, layout(el, {margin: {l: 196, r: 150, t: 30, b: 50},
-    xaxis: {tickvals: Q, ticktext: Q.map(qtick), showline: false},
-    yaxis: {autorange: 'reversed', showgrid: false, tickvals: y, ticktext: y, tickfont: {family: T.sans, size: 15, color: T.ink}},
-    shapes: [{type: 'line', xref: 'x', yref: 'paper', x0: 7.5, x1: 7.5, y0: 0, y1: 1, line: {color: T.ink, width: 2, dash: 'dot'}}]}), CFG)
-    .then(heatAnn);
-}
-
-function chHazard(){
-  const h = +$('#hz').value / 100;
-  const tau = []; for (let k = 120; k >= 1; k--) tau.push(k / 10);
-  const p = tau.map((x) => 1 - Math.exp(-h * x));
-  const haz = p.map((v, i) => -Math.log(1 - v) / tau[i]);
-  const p6 = 1 - Math.exp(-6 * h), p1 = 1 - Math.exp(-h);
-  $('#hz-o').textContent = fmt(100 * h) + '%';
-  $('#hz-p6').textContent = pct(p6); $('#hz-p1').textContent = pct(p1);
-  $('#hz-h').textContent = fmt(100 * h) + '%';
-  const xa = {range: [12.4, 0], dtick: 3, title: {text: 'months left'}, showline: true, zeroline: false};
-  const ep = $('#ch-hz-p'), eh = $('#ch-hz-h');
-  P.react(ep, [
-    {type: 'scatter', mode: 'lines', x: tau, y: p.map((v) => 100 * v), line: {color: T.navy, width: 3},
-      hovertemplate: '%{x:.1f} months left<br>p = %{y:.1f}%<extra></extra>'},
-    {type: 'scatter', mode: 'markers+text', x: [6, 1], y: [100 * p6, 100 * p1], text: [pct(p6), pct(p1)], textposition: 'top right',
-      textfont: {family: T.mono, size: 14, color: T.ink}, marker: {size: 10, color: T.navy, line: {color: T.surface, width: 2}},
-      hovertemplate: '%{x} months left<br>p = %{y:.1f}%<extra></extra>'}
-  ], layout(ep, {margin: {l: 50, r: 10, t: 10, b: 48}, xaxis: xa, yaxis: {range: [0, 100], dtick: 25, ticksuffix: '%'}}), CFG);
-  P.react(eh, [
-    {type: 'scatter', mode: 'lines', x: tau, y: haz.map((v) => 100 * v), line: {color: T.navy, width: 3},
-      hovertemplate: '%{x:.1f} months left<br>hazard = %{y:.1f}% per month<extra></extra>'}
-  ], layout(eh, {margin: {l: 50, r: 10, t: 10, b: 48}, xaxis: xa, yaxis: {range: [0, 25], dtick: 5, ticksuffix: '%'}}), CFG);
-}
-$('#hz').addEventListener('input', () => { if (P) chHazard(); });
-
-function ch5a(){
-  const el = $('#ch-5a'), s = D.s5a, X = s.horizons;
-  const tr = (k, name) => ({type: 'bar', x: X, y: s[k], name, marker: {color: T[k], line: {width: 0}},
-    text: k === 'mon' ? s[k].map((v, i) => i === 0 ? '<b>' + fmt(v, 1) + '</b>' : '') : null, textposition: 'outside', cliponaxis: false,
-    textfont: {family: T.display, size: 18, color: T.ink},
-    hovertemplate: mark(T[k]) + ' ' + name + '<br>%{x}: t = %{y:.2f}<extra></extra>'});
-  P.react(el, [tr('mon', 'US monetary'), tr('fis', 'US fiscal-political')], layout(el, {barmode: 'group', bargap: 0.32, bargroupgap: 0.08,
-    barcornerradius: 3, margin: {l: 44, r: 8, t: 10, b: 34},
-    yaxis: {range: [-1.4, 5.4], dtick: 1, zeroline: true, zerolinecolor: T.faint, zerolinewidth: 1, title: {text: ''}},
-    shapes: [band(-2, 2)],
-    annotations: [
-      {x: 1, xref: 'paper', xanchor: 'right', y: -1.05, yanchor: 'middle', showarrow: false, text: 'noise zone (|t| < 2)',
-        font: {family: T.mono, size: 12, color: T.muted}},
-      {x: '+20 days', y: s.fis[3], xshift: 13, showarrow: true, arrowhead: 0, arrowwidth: 1.2, arrowcolor: T.faint, ax: -112, ay: -48,
-        text: 'horizon picked after looking;<br>fails robustness (Romain)', align: 'right', font: {family: T.sans, size: 13, color: T.muted}}]}), CFG);
-}
-
-function ch5b(){
-  const el = $('#ch-5b'), s = D.s5b, c = s[st.cellB], H = s.hours, names = PM_NAME[st.cellB];
-  $('#lg5b-c').style.setProperty('--c', T[st.cellB]);
-  $('#lg5b-pm').textContent = names[0]; $('#lg5b-fx').textContent = names[1];
-  const ns = c.pm.n.concat(c.fx.n).filter((v) => v > 0);
-  $('#evn-5b').textContent = fmt(Math.min.apply(null, ns)) + ' to ' + fmt(Math.max.apply(null, ns)) + ' events per study (top 1% hourly moves), depending on the hour';
-  const ht = (nm) => nm + '<br>hour %{customdata[0]}: t = %{y:.2f}<br>%{customdata[1]} events<extra></extra>';
-  const hl = H.map((h) => fmt(h, 0, true));
-  P.react(el, [
-    {type: 'scatter', mode: 'lines+markers', x: H, y: c.fx.t, name: names[1], customdata: H.map((h, i) => [hl[i], fmt(c.fx.n[i])]),
-      line: {color: T.muted, width: 2, dash: 'dash'}, marker: {size: 7, color: T.muted}, hovertemplate: ht(names[1])},
-    {type: 'scatter', mode: 'lines+markers', x: H, y: c.pm.t, name: names[0], customdata: H.map((h, i) => [hl[i], fmt(c.pm.n[i])]),
-      line: {color: T[st.cellB], width: 3}, marker: {size: 8, color: T[st.cellB], line: {color: T.surface, width: 1.5}}, hovertemplate: ht(names[0])}
-  ], layout(el, {margin: {l: 44, r: 10, t: 22, b: 44},
-    xaxis: {range: [-6.5, 6.5], tickvals: [-6, -4, -2, 0, 2, 4, 6], ticktext: [-6, -4, -2, 0, 2, 4, 6].map((h) => fmt(h, 0, true)),
-      title: {text: 'hours from the event (0 = event hour)'}},
-    yaxis: {range: [-3, 6.5], dtick: 2},
-    shapes: [band(-1.96, 1.96), {type: 'line', xref: 'x', yref: 'paper', x0: 0, x1: 0, y0: 0, y1: 1, line: {color: T.ink, width: 1.5, dash: 'dot'}}],
-    annotations: [{x: 0, y: 1, yref: 'paper', yanchor: 'bottom', showarrow: false, text: 'event', font: {family: T.mono, size: 12, color: T.muted}},
-      {x: 1, xref: 'paper', xanchor: 'right', y: -2.45, showarrow: false, text: '±1.96', font: {family: T.mono, size: 12, color: T.muted}}]}), CFG);
-}
-
-function ch5c(){
-  const el = $('#ch-5c'), s = D.s5c, d = s[st.reopen], keys = ['mon', 'fis', 'geo'];
-  P.react(el, [{type: 'bar', orientation: 'h', y: s.rows, x: d.t, marker: {color: keys.map((k) => T[k])},
-    text: d.t.map((v) => fmt(v, 2)), textposition: 'outside', cliponaxis: false, textfont: {family: T.mono, size: 15, color: T.ink},
-    customdata: s.rows.map(() => fmt(d.n)),
-    hovertemplate: '<b>%{y}</b><br>t = %{x:.2f}<br>%{customdata} pair-weekends<extra></extra>'}],
-    layout(el, {margin: {l: 150, r: 16, t: 8, b: 44}, bargap: 0.42, barcornerradius: 3,
-      xaxis: {range: [-3, 3], dtick: 1, showgrid: true, gridcolor: T.rule, zeroline: true, zerolinecolor: T.faint, zerolinewidth: 1,
-        showline: false, title: {text: 't-statistic'}},
-      yaxis: {autorange: 'reversed', showgrid: false, tickfont: {family: T.sans, size: 15, color: T.ink}},
-      shapes: [band(-2, 2, 'x')],
-      annotations: [{x: 2, y: 1, yref: 'paper', xanchor: 'right', yanchor: 'top', showarrow: false, text: '|t| < 2', font: {family: T.mono, size: 12, color: T.muted}}]}), CFG);
-}
-
-function renderAll(){
-  T = tok();
-  if (!P) {
-    $$('.chart').forEach((el) => { el.innerHTML = '<p class="nolib">Chart library did not load (no connection to cdnjs.cloudflare.com).</p>'; });
-    return;
-  }
-  chS1(); chHeat(); chHazard(); ch5a(); ch5b(); ch5c();
-}
-
-/* ---------- boot ---------- */
-const start = parseInt((location.hash || '').slice(1), 10);
-go(Number.isFinite(start) ? start - 1 : 0);
-gateState();
-const fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
-/* Hosts that rewrite script tags (e.g. htmlpreview) skip the Plotly <script src>: load it here if it is missing. */
-const plotlyReady = P ? Promise.resolve() : new Promise((ok) => {
-  const sc = document.createElement('script'); sc.src = PLOTLY_SRC; sc.onload = sc.onerror = () => { P = window.Plotly; ok(); };
-  document.head.appendChild(sc);
-});
-Promise.all([fontsReady, plotlyReady]).then(() => { drawLinks(); renderAll(); });
-addEventListener('resize', () => { if (P) $$('.js-plotly-plot').forEach((g) => P.Plots.resize(g)); });
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderAll);
-new MutationObserver(renderAll).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
-})();
+seg('fSeg', finding); finding('d');
 </script>
 </body>
 </html>
