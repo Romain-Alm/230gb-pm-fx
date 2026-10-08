@@ -3,7 +3,7 @@
 Reads the result files of SLIDES_PIERO.md section 2 (read-only), computes the derived numbers,
 checks them against the expected values (tolerance: last displayed digit) and rewrites two
 things in index.html:
-  - the JSON block <script id="deck-data">, read by the charts and controls;
+  - the data block <script id="deck-data"> (window.DECK_DATA = {...}), read by the charts and controls;
   - the text of every element with data-k="<key>" (the numbers quoted in the slide text).
 Markup, styles and scripts of index.html are edited by hand, and teammates append their own
 <section class="slide"> blocks: this script never touches them. It also refuses to write a deck
@@ -249,7 +249,7 @@ TXT = {
 
 deck = DECK.read_text(encoding="utf-8")
 blob = json.dumps(DATA, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-deck, n_json = re.subn(r'(<script id="deck-data" type="application/json">).*?(</script>)',
+deck, n_json = re.subn(r'(<script id="deck-data">window\.DECK_DATA = ).*?(;</script>)',
                        lambda m: m.group(1) + blob + m.group(2), deck, flags=re.S)
 expect("deck-data block present once", n_json, 1)
 used = set()
