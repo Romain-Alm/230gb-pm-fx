@@ -8,7 +8,7 @@ Thomas Claudel.
 | What | Where |
 |---|---|
 | **Interactive page** | [open the page](https://htmlpreview.github.io/?https://github.com/Romain-Alm/230gb-pm-fx/blob/main/deliverables/index.html), or download `deliverables/index.html` and open it in a browser (one self-contained file, no network needed) |
-| **Slides** (8 October 2026) | [open the slides](https://htmlpreview.github.io/?https://github.com/Romain-Alm/230gb-pm-fx/blob/main/presentation/index.html): arrow keys or space to move, `N` for speaker notes, `F` for full screen (`presentation/index.html`) |
+| **Slides** (8 October 2026) | [open the slides](https://github.com/Romain-Alm/230gb-pm-fx/blob/main/presentation/230GB%20presentation.pdf) (PDF, `presentation/230GB presentation.pdf`) |
 | **All results** | `results/RESULTS.md`: every number, its status (pre-registered or a posteriori) and the caveats |
 | **Rerun everything** | three steps, one command, about 50 minutes: [Reproduce](#reproduce) below |
 
@@ -197,7 +197,7 @@ tests/             spec 12 tests (look-ahead, DST, causal inclusion, bracket EV,
 notebooks/         two executed walk-through notebooks and their builder
 results/           tables, figures, RESULTS.md (generated)
 deliverables/      index.html (the interactive page, generated) and a short guide
-presentation/      index.html (the slides of 8 October 2026) and the script that checks their numbers
+presentation/      230GB presentation.pdf (the slides of 8 October 2026)
 ai_log/            AI use and the classification validation
 run_all.py         the one command that rebuilds everything
 PROJECT_SPEC.md    the project specification written before the backtests (rules, tests, deliverables)
