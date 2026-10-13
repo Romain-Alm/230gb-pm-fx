@@ -41,7 +41,7 @@ for r, v in zip(sorted(ll, key=lambda r: int(r["hour"])), hourly):
     check(f"hourly h{r['hour']}", float(r["mean"]) / se, v)
 wk = {r["regressor"]: float(r["t"]) for r in rows("weekend/weekend_gap_regressions.csv")
       if r["model"] == "A1+GEO_weekend_gap_london"}
-for reg, v in {"MONETARY": 0.00, "FISCAL_POLITICAL": 0.59, "SPILL_GLOBAL_GEOPOLITICS": -0.62}.items():
+for reg, v in {"MONETARY": -0.07, "FISCAL_POLITICAL": 0.58, "SPILL_GLOBAL_GEOPOLITICS": -0.62}.items():
     check("weekend " + reg, wk[reg], v)
 
 # Slide 6: A vs B correlation

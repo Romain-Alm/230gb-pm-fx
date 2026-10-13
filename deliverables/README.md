@@ -7,7 +7,7 @@ Romain Almeida, Piero Pelosi, Hino Wirachapong, Thomas Claudel.
 | File | What it is |
 |---|---|
 | `index.html` | The interactive page (spec 11.2). One self-contained file: open it in a browser, no server or network needed. |
-| the presentation | The slides presented on 8 October 2026. |
+| `../presentation/index.html` | The slides presented on 8 October 2026 ([open the slides](https://htmlpreview.github.io/?https://github.com/Romain-Alm/230gb-pm-fx/blob/main/presentation/index.html); arrow keys or space to move, `N` for speaker notes, `F` for full screen). Their numbers are checked against `results/` by `python presentation/build_piero_slides.py`. |
 | `README.md` | This guide. |
 
 The full replication package is the rest of the repository; its `README.md` (at the root) gives

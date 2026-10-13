@@ -267,7 +267,7 @@ const COV = [ // share of weekdays covered 2024-25, USD 50k (results/coverage_ce
   ["Euro area · Fiscal",7.6],["UK · Fiscal",7.6],["Japan · Monetary",3.1]];
 const DAILY = {mon:[4.02,0.75,1.02], fis:[0.33,0.93,1.92]}; // results/strategy_a/diagnostics.csv, A1, horizons 0/1/5
 const HOURLY = [-1.31,1.41,-0.82,1.48,-1.38,1.30,5.80,2.64,1.63,-0.06,0.13,-0.90,-1.33]; // results/leadlag/event_study.csv, FX top 1% -> PM US/MONETARY, t = mean/se
-const WEEKEND = [["US monetary",0.00,"--c-mon"],["US fiscal",0.59,"--c-fis"],["Global geopolitics",-0.62,"--c-geo"]]; // results/weekend/weekend_gap_regressions.csv, A1+GEO, London reopening
+const WEEKEND = [["US monetary",-0.07,"--c-mon"],["US fiscal",0.58,"--c-fis"],["Global geopolitics",-0.62,"--c-geo"]]; // results/weekend/weekend_gap_regressions.csv, A1+GEO, London reopening
 
 /* ---------- deck ---------- */
 const stage = document.getElementById('stage'), slides = [...document.querySelectorAll('.slide')];
