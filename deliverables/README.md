@@ -6,7 +6,7 @@ Romain Almeida, Piero Pelosi, Hino Wirachapong, Thomas Claudel.
 
 | File | What it is |
 |---|---|
-| `index.html` | The interactive page (spec 11.2). One self-contained file: open it in a browser, no server or network needed. |
+| `index.html` | The interactive page ([open the page](https://htmlpreview.github.io/?https://github.com/Romain-Alm/230gb-pm-fx/blob/main/deliverables/index.html)). One self-contained file: download it and open it in a browser, no server or network needed. |
 | `../presentation/index.html` | The slides presented on 8 October 2026 ([open the slides](https://htmlpreview.github.io/?https://github.com/Romain-Alm/230gb-pm-fx/blob/main/presentation/index.html); arrow keys or space to move, `N` for speaker notes, `F` for full screen). Their numbers are checked against `results/` by `python presentation/build_piero_slides.py`. |
 | `README.md` | This guide. |
 
@@ -24,10 +24,9 @@ the details. Every number and figure comes from `results/`; `results/RESULTS.md`
 
    On Linux or macOS use `.venv/bin/python` in place of `.venv/Scripts/python.exe`.
 
-2. **Market data (Bloomberg and WRDS, licensed).** Download the two files from the Google Drive
-   folder shared with the instructor: DRIVE_LINK
-
-   Put them at these paths in the repository:
+2. **Market data (Bloomberg and WRDS, licensed).** Unzip `230gb_market_data.zip` (sent to the
+   instructor with the submission; not in this public repository) at the repository root. It
+   creates the two files the pipeline reads:
 
    ```
    data/raw/market/priority1_market_data.csv

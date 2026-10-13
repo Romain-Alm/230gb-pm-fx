@@ -1,33 +1,35 @@
 # Prediction-market signals for global FX strategies (MFE 230GB, Fall 2026)
 
-Replication package for the final project of MFE 230GB (Currency Markets).
+Final project of MFE 230GB (Currency Markets). Romain Almeida, Piero Pelosi, Hino Wirachapong,
+Thomas Claudel.
 
-**Presentation (October 8, 2026): [open the slides](https://htmlpreview.github.io/?https://github.com/Romain-Alm/230gb-pm-fx/blob/main/presentation/index.html)**.
-Arrow keys or space to move, `N` for speaker notes, `F` for full screen. Source:
-`presentation/index.html`; its numbers are read from `results/` and checked by
-`python3 presentation/build_piero_slides.py`.
+## Start here
 
-We build continuous macro theme indices from Polymarket and Kalshi contracts (monetary policy,
-inflation, fiscal and political outcomes, trade and tariffs, geopolitics) and use them in two
-strategies:
+| What | Where |
+|---|---|
+| **Interactive page** | [open the page](https://htmlpreview.github.io/?https://github.com/Romain-Alm/230gb-pm-fx/blob/main/deliverables/index.html), or download `deliverables/index.html` and open it in a browser (one self-contained file, no network needed) |
+| **Slides** (8 October 2026) | [open the slides](https://htmlpreview.github.io/?https://github.com/Romain-Alm/230gb-pm-fx/blob/main/presentation/index.html): arrow keys or space to move, `N` for speaker notes, `F` for full screen (`presentation/index.html`) |
+| **All results** | `results/RESULTS.md`: every number, its status (pre-registered or a posteriori) and the caveats |
+| **Rerun everything** | three steps, one command, about 50 minutes: [Reproduce](#reproduce) below |
 
-- **Strategy A (G10).** Only US cells pass the coverage rule (D13), so the primary rule
-  (A1) is a dollar signal: US MONETARY and US FISCAL news, with theory-given signs and a
-  regime-dependent fiscal sign (D2, D15), drive a G10 basket against USD. Variants A2 and A3 and
-  the "+S" spillover versions are pre-declared (D14, D17).
-- **Strategy B (EM).** An EM carry portfolio (1-month forwards and NDFs; de facto floating
-  currencies from the Ilzetzki-Reinhart-Rogoff classification, D23) with a prediction-market
-  geopolitical overlay that cuts exposure on escalation and confirmed shocks. Benchmarked against
-  the same rule driven by VIX.
+## The project
 
-Where to read the results:
-- `deliverables/`: the interactive page, the presentation and a short guide.
-- `results/RESULTS.md`: every number, with a reading guide, the status of each result
-  (pre-registered or a posteriori) and the caveats. Generated from the result files.
-- `notebooks/01_prediction_market_layer.ipynb`, `notebooks/02_strategies_tests_results.ipynb`
-  : step-by-step walk-through, executed.
-- `results/figures/` (analysis figures), `results/figures/slides/` (presentation figures),
-  `results/site_data/` (every table and series for the web page, with its own README).
+Prediction markets (Polymarket and Kalshi) price macro events every day: Fed decisions, inflation
+prints, elections and budgets, tariffs, wars. We turn these contracts into continuous daily indices
+by country and theme (monetary policy, inflation, fiscal and political outcomes, trade and
+tariffs, geopolitics) and use them in two currency strategies:
+
+- **Strategy A (G10).** Only US cells have enough liquid contracts, so the primary rule is a dollar
+  signal: US monetary and US fiscal news, with signs given by theory (hawkish news buys the dollar;
+  the fiscal sign depends on whether the economy is in a monetary- or fiscal-dominance regime),
+  drive a G10 basket against USD.
+- **Strategy B (EM).** An emerging-market carry portfolio (1-month forwards and NDFs, freely
+  floating currencies only) with a prediction-market geopolitical overlay that cuts exposure when
+  escalation rises or a shock is confirmed. Benchmarked against the same rule driven by VIX.
+
+Every rule was fixed before its backtest; variants and a posteriori additions are labelled as such.
+Step-by-step walk-throughs: `notebooks/01_prediction_market_layer.ipynb` and
+`notebooks/02_strategies_tests_results.ipynb` (executed). Figures: `results/figures/`.
 
 ## Reproduce
 
@@ -41,16 +43,18 @@ python -m venv .venv
 .venv/Scripts/python.exe -m pip install -r requirements.txt
 ```
 
-**2. Market data (Bloomberg and WRDS, licensed).** The only input not in this repository: two files
-shared with the instructor through a restricted Google Drive folder (Berkeley access). Copy them to:
+**2. Market data (Bloomberg and WRDS, licensed).** The only input not in this public repository:
+the zip `230gb_market_data.zip`, sent to the instructor with the submission. Unzip it at the
+repository root; it creates the two files the pipeline reads:
 
 ```
 data/raw/market/priority1_market_data.csv        # FX spot, forwards, NDFs, risk series, 10-year yields
 data/raw/market_qc/priority1_qc_flags.csv        # QC flags of the delivery (blanked observations)
 ```
 
-Without the Drive, the same series can be pulled from a Bloomberg terminal (tickers below) and
-WRDS, in the long format described under "Bloomberg".
+Everything else (prediction-market panels, hourly FX, hand-coded inputs, code) is in the
+repository. Without the zip, the same series can be pulled from a Bloomberg terminal (tickers
+below) and WRDS, in the long format described under "Bloomberg".
 
 **3. Run.**
 
@@ -68,7 +72,7 @@ committed versions (`git diff --stat results deliverables`). Each stage can be r
 
 The prediction-market layer starts from the four panels in `data/processed/` (`pm_markets`,
 `pm_daily`, `weekend_changes`, `hourly_index`), built from the raw trades tape (about 75 GB, not
-shared). With the tape in place (`KAIROS_DATA_ROOT`, next section) the `pm` stage rebuilds them
+shared). With the tape in place (`KAIROS_DATA_ROOT`, see "Data") the `pm` stage rebuilds them
 first.
 
 Expected runtime on the project machine (shared server):
@@ -98,7 +102,7 @@ The classification check against 200 hand-labelled markets
 | Where | What |
 |---|---|
 | this repository | code, hand-coded inputs (`data/manual/`), the four prediction-market panels (`data/processed/`), hourly FX candles (`data/raw/intraday/dukascopy_hourly.parquet`), every result (`results/`) and the page (`deliverables/`) |
-| restricted Drive (instructor) | the Bloomberg/WRDS market file and its QC flags (step 2 above) |
+| `230gb_market_data.zip`, sent to the instructor | the Bloomberg/WRDS market file and its QC flags (step 2 above) |
 | not shared | the raw prediction-market trades tape (about 75 GB); the panels in `data/processed/` are built from it |
 
 | Data | Used for | Source and access |
@@ -216,10 +220,9 @@ ai_log/            AI use and the classification validation
 
 ## AI use
 
-- **Code**: written with Claude Code (Anthropic) in the project folder, reviewed by the team.
-  What was generated, file by file and phase by phase, with the decisions it relates to:
-  `ai_log/code_generation.md`.
-- **No LLM is called by the pipeline**: contract classification is rule-based (D1) and checked
-  against a hand-labelled random sample (`ai_log/classification/`).
-- **Design and review conversations** held outside Claude Code (date, purpose, decisions they led
-  to): `ai_log/design_conversations.md`.
+- Claude Code (Anthropic) assisted with writing the code, under the team's direction and review;
+  `ai_log/code_generation.md` lists what it produced.
+- The design and the review of the results were discussed with Claude (claude.ai, web):
+  `ai_log/design_conversations.md`.
+- The pipeline calls no language model: the contract classification is rule-based and is checked
+  against 200 hand-labelled markets (`ai_log/classification/`).
