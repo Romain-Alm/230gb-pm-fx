@@ -110,10 +110,10 @@ The classification check against 200 hand-labelled markets
 | Prediction markets (trades, market metadata), 2024-01-01 to 2026-09-24 | all signals | Probalytics archive and live export (licensed, see below) |
 | FX spot, 1M forwards and NDFs, MSCI World TR, S&P 500 TR, DXY, Brent | returns, carry, costs, risk | Bloomberg terminal (licensed) |
 | VIX | VIX benchmark, risk | Cboe via WRDS (licensed) or public Cboe history |
-| 10-year government yields (US, DE, UK, JP) | fiscal regime indicator (D15) | official public sources |
-| Hourly FX candles | weekend gap test (D24), lead-lag (D26) | Dukascopy (public) |
-| De facto exchange-rate regimes | Strategy B universe (D23) | Ilzetzki, Reinhart and Rogoff (public) |
-| FRED, ECB reference rates | preliminary run on free data only (D22) | public |
+| 10-year government yields (US, DE, UK, JP) | fiscal regime indicator (Strategy A) | official public sources |
+| Hourly FX candles | weekend gap test, hourly lead-lag | Dukascopy (public) |
+| De facto exchange-rate regimes | Strategy B universe (free floats only) | Ilzetzki, Reinhart and Rogoff (public) |
+| FRED, ECB reference rates | preliminary run on free data only | public |
 | Hand-coded inputs | party fiscal stances, debt table, EM screen | `data/manual/` (sources in each file) |
 
 ### Prediction markets (Probalytics)
@@ -153,9 +153,8 @@ BDH with default options (daily, no fill), fields `PX_BID`, `PX_ASK`, `PX_LAST`,
 - The loader reads a long file `date, ticker, field, value` in `data/raw/market/`, with the
   ticker names of `config/market_series.yaml` (e.g. `EURUSD` with fields `bid`, `ask`, `last`;
   `EURUSD_1M_FWD` with outright `bid`, `ask`). An optional QC file in `data/raw/market_qc/` lists
-  observations removed before use (D28). The data team's delivery README, with the exact build,
-  checks and close times, is kept with the raw data.
-- No series is a 16:00 London fix: close times and the execution lag they imply are in D28.
+  observations removed before use.
+- No series is a 16:00 London fix: the execution lag this implies is under "Main conventions".
 
 ### Other sources
 
@@ -171,7 +170,7 @@ BDH with default options (daily, no fill), fields `PX_BID`, `PX_ASK`, `PX_LAST`,
 | FRED (preliminary run only) | VIX, Brent, US 10Y, dollar index, S&P 500, OECD rates | `python -m src.data.download_free fred`; use your own API key in the git-ignored `config/secrets.local.yaml` (`fred_api_key: <key>`); without a key the public CSV endpoint is used |
 | ECB (preliminary run only) | euro reference rates | `python -m src.data.download_free ecb` |
 
-The preliminary run on free data (D22) is `run_preliminary_free.py`; its results are in
+The preliminary run on free data is `run_preliminary_free.py`; its results are in
 `results/preliminary_free/` and are superseded by `results/`.
 
 ## Code from another project (Kairos)
@@ -193,12 +192,17 @@ src/strategies/    strategy_a.py, strategy_b.py, run_a.py, run_b.py, diagnostics
 src/backtest/      engine (timing, volatility target, caps, no-trade band, costs), metrics, robustness
 src/risk/          betas, downside beta, episodes, conditional performance, liquidity, concentration,
                    A vs B, leverage
-src/report/        figures, slide figures, site data, RESULTS.md generator, HTML page builder (site/)
+src/report/        figures, slide figures, site data, RESULTS.md generator, HTML page builder (site/: page sources)
 tests/             spec 12 tests (look-ahead, DST, causal inclusion, bracket EV, hazard, timing, costs)
 notebooks/         two executed walk-through notebooks and their builder
 results/           tables, figures, RESULTS.md (generated)
-deliverables/      index.html (the interactive page, generated), the presentation and a short guide
+deliverables/      index.html (the interactive page, generated) and a short guide
+presentation/      index.html (the slides of 8 October 2026) and the script that checks their numbers
 ai_log/            AI use and the classification validation
+run_all.py         the one command that rebuilds everything
+PROJECT_SPEC.md    the project specification written before the backtests (rules, tests, deliverables)
+ASSIGNMENT.md      the course assignment
+run_preliminary_free.py  first run on free public data only, superseded (results/preliminary_free/)
 ```
 
 ## Main conventions
@@ -206,7 +210,7 @@ ai_log/            AI use and the classification validation
 - **Snapshot**: 16:00 London. A prediction-market value at t is the last trade strictly before
   the snapshot. Stored timestamps are UTC; DST is handled per date.
 - **Execution**: FX prices are Bloomberg closes. A signal of day t trades at the New York close
-  of t (G10, Latin America); at the Asian close of t+1 for Asian currencies (KRW in B) (D28).
+  of t (G10, Latin America); at the Asian close of t+1 for Asian currencies (KRW in B).
 - **FX excess return**: `rx(t+1) = s(t+1) - s(t) + carry(t)/252`, with `s` the log USD price of
   the currency and `carry = (s - f) x 12` from the 1-month forward or NDF.
 - **Signals are causal**: volatilities, z-scores and filters use data up to t-1, or up to t where
