@@ -133,11 +133,7 @@ def _guide(w):
       "- **Scope frozen** (final freeze of 2026-10-03, `DECISIONS.md`): no rule or variant will be added.\n"
       "- **Slide figures**: `results/figures/slides/` (1920 x 1080, PNG and SVG, no in-figure title; data in "
       "`results/site_data/slide_*.csv`).\n"
-      "- **Pending**: (1) hand validation of the classification: label the four files "
-      "`ai_log/classification/validation_sheet_1.csv` to `_4.csv` (50 rows each; guide: `LABELLING_GUIDE.md`), then run "
-      "`.venv/Scripts/python.exe -m src.pm.validation score` (accuracy per field: theme, zone, direction; shown "
-      "automatically in section 1); (2) HTML page (data ready in `results/site_data/`); (3) list of the AI conversations "
-      "used for design and review (`ai_log/design_conversations.md`, to be filled from the exports).\n\n")
+      "- **Interactive page**: `deliverables/index.html` (self-contained, rebuilt by `run_all.py --stage site`).\n\n")
     w("**Glossary of strategies**:\n\n")
     w(table(pd.DataFrame(GLOSSARY, columns=["name", "description", "status"])))
 
@@ -438,10 +434,22 @@ def build(preliminary: bool = False) -> str:
         w(f"\nContracts in the panel: {len(cd['contract_id'].unique()):,}; by unit: "
           + ", ".join(f"{k} {v:,}" for k, v in u.items())
           + " (hazard = deadline markets valued as hazard rates, D18).\n")
-    vs = _read(ROOT / "ai_log" / "classification" / "validation_scores.csv")
-    w("\n**Hand validation**: " + ("see the table.\n\n" + table(vs) if vs is not None else
-                                  "200 events to label (`ai_log/classification/validation_sheet_1.csv` to `_4.csv`), "
-                                  "score not computed yet.\n"))
+    vdir = ROOT / "ai_log" / "classification"
+    vs, va = _read(vdir / "validation_scores.csv"), _read(vdir / "validation_scores_adjudicated.csv")
+    if vs is None:
+        w("\n**Hand validation**: 200 events to label (`ai_log/classification/validation_sheet_1.csv` to `_4.csv`), "
+          "score not computed yet.\n")
+    else:
+        vt = pd.concat([vs.assign(labels="blind")]
+                       + ([va.assign(labels="adjudicated")] if va is not None else []))
+        for c in ["n_labelled", "n_macro", "sign_errors_macro"]:
+            if c in vt:
+                vt[c] = vt[c].astype(int).astype(str)
+        w("\n**Hand validation** (200 markets, stratified by predicted theme; share of hand labels the rules match; "
+          "zone and direction on the macro labels only). Adjudicated row: disagreements reviewed "
+          "(`validation_adjudication.csv`).\n")
+        w(table(vt, [c for c in ["labels", "n_labelled", "theme_accuracy", "zone_accuracy_macro",
+                                 "direction_accuracy_macro"] if c in vt]))
 
     # ------------------------------------------------------------ 2. Coverage
     w("\n## 2. Coverage table (rule: at least 60% of weekdays covered in 2024-2025)\n\n")

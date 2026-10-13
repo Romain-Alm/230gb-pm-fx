@@ -11,8 +11,10 @@ Stages:
   strategies  Strategy A and B backtests (needs market data in data/raw/market)
   robustness  placebos, grids, leave-one-event-out, sub-periods
   risk        risk tables
-  figures     strategy figures
-The pm stage reads the Kairos data estate (read-only); later stages read only this repo.
+  figures     strategy figures, slide figures, site data, RESULTS.md and the HTML page
+  site        site data and the HTML page only (deliverables/index.html), for a quick rebuild of the page
+The pm stage reads the Kairos data estate (read-only) when it is present; without it, it starts from
+the panels in data/processed/ shared with the data bundle (TAPE_PANELS). Later stages read only this repo.
 """
 from __future__ import annotations
 
@@ -21,19 +23,36 @@ import time
 
 import pandas as pd
 
-from src.common import get_logger, load_config, rpath
+from src.common import ROOT, get_logger, kairos_root, load_config, rpath
 
 log = get_logger("run_all")
+# Panels read from the raw trades tape; shared with the data bundle for runs without the estate.
+TAPE_PANELS = ("pm_markets.parquet", "pm_daily.parquet", "weekend_changes.parquet", "hourly_index.parquet")
 
 
 def stage_pm(cfg, skip_metadata: bool = False):
     from src.data import pm_markets, pm_panel
-    from src.pm import classify, contracts, coverage, indices, shocks, validation, weekend
+    from src.pm import contracts, coverage, hourly, indices, shocks, validation, weekend
     from src.report import figures_pm
-    if not skip_metadata:
-        pm_markets.build(cfg)            # about 12 minutes (scans 35 M market rows)
-    pm_panel.build(cfg)
-    classify.build(cfg)
+    proc = rpath("processed", cfg)
+    # Without the Kairos data estate (raw trades tape, about 75 GB), start from the panels built
+    # from it and shared with the data bundle (README, "Data").
+    estate = kairos_root(cfg).exists()
+    if estate:
+        if not skip_metadata:
+            pm_markets.build(cfg)        # about 12 minutes (scans 35 M market rows)
+        pm_panel.build(cfg)
+    else:
+        missing = [f for f in TAPE_PANELS if not (proc / f).exists()]
+        if missing:
+            raise FileNotFoundError(f"no Kairos data estate at {kairos_root(cfg)} and missing in {proc}: "
+                                    f"{', '.join(missing)} (see README, 'Data')")
+        log.warning("no Kairos data estate at %s: reusing %s", kairos_root(cfg), ", ".join(TAPE_PANELS))
+    if (ROOT / "src" / "pm" / "vendor" / "geo_registry.py").exists():
+        from src.pm import classify
+        classify.build(cfg)
+    else:
+        log.warning("src/pm/vendor/ missing: reusing data/processed/contracts_classified.parquet")
     contracts.build(cfg)
     contracts.build(cfg, min_volume=10_000, out_file="contract_days_v10k.parquet")
     contracts.build(cfg, min_volume=250_000, out_file="contract_days_v250k.parquet")
@@ -45,9 +64,13 @@ def stage_pm(cfg, skip_metadata: bool = False):
     for f in ("", "_v10k", "_v250k", "_placebo", "_prob", "_v10k_prob"):
         indices.build(cfg, panel_file=f"contract_days{f}.parquet", out_file=f"theme_index{f}.parquet")
     shocks.build(cfg)
-    weekend.build(cfg)
+    if estate:
+        weekend.build(cfg)
+        hourly.build(cfg)                # D26, exploratory lead-lag input
     figures_pm.theme_indices(cfg)
-    if not (rpath("processed", cfg).parent.parent / "ai_log" / "classification" / "validation_sheet.csv").exists():
+    if any(validation.OUT.glob("validation_sheet_[0-9]_human.csv")):
+        validation.score()               # hand validation of the classification (labels in ai_log/classification/)
+    elif not (validation.OUT / "validation_sheet.csv").exists():
         validation.make_sheet(cfg)
 
 
@@ -96,7 +119,7 @@ def stage_posthoc(cfg, shuffles: int, ctx_a: dict | None = None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", default="all",
-                    choices=["all", "pm", "strategies", "robustness", "risk", "figures"])
+                    choices=["all", "pm", "strategies", "robustness", "risk", "figures", "site"])
     ap.add_argument("--skip-metadata", action="store_true", help="reuse pm_markets.parquet")
     ap.add_argument("--shuffles", type=int, default=100)
     args = ap.parse_args()
@@ -120,11 +143,19 @@ def main():
             run_risk.run(cfg)
             leverage.run(cfg)       # reporting: gross and net exposure, caps, realised volatility
         elif st == "figures":
-            from src.report import figures_slides, figures_strategies, site_data, summary_md
+            from src.report import figures_slides, figures_strategies, site_data, strategy_a_checks, strategy_a_explained, summary_md
             figures_strategies.build(cfg)
             figures_slides.build(cfg)
+            strategy_a_explained.run(cfg)   # diagnostic note on A1 (results/notes/), no rule change
+            strategy_a_checks.run(cfg)      # presentation checks on A1 (results/notes/), no rule change
             site_data.build(cfg)
             summary_md.build()
+            from src.report import build_site
+            build_site.build(cfg)           # spec 11.2: self-contained interactive page, deliverables/index.html
+        elif st == "site":
+            from src.report import build_site, site_data
+            site_data.build(cfg)
+            build_site.build(cfg)
     log.info("done in %.1f minutes", (time.time() - t0) / 60)
 
 

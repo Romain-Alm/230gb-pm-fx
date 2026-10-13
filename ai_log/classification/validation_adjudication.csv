@@ -1,0 +1,97 @@
+﻿item,field,title,human,rules,final,decided_by,reason
+1,zone,Will the Australian Labor Party win between 75 and 79 seats?,AU,US,AU,Romain,"foreign election: zone of the country, not US"
+1,direction,Will the Australian Labor Party win between 75 and 79 seats?,B,0,B,Claude,option of a mutually exclusive set (guide definition of B); rules did not detect the set
+4,theme,Will Volt Netherlands (Volt) win the most seats in Amsterdam’s 2026 municipal election?,OTHER,FISCAL_POLITICAL,OTHER,Romain,"no macro channel; rule fired on a keyword (election, President, strike(s), bomb, out as)"
+5,theme,Will the count of nominations formally received by the US Senate for Kevin Warsh to be Chairman of the Board of Governors of the Federal Reserve be above 0 before March 13?,MONETARY,OTHER,MONETARY,Romain,Fed chair nomination: MONETARY per the guide
+5,zone,Will the count of nominations formally received by the US Senate for Kevin Warsh to be Chairman of the Board of Governors of the Federal Reserve be above 0 before March 13?,US,,US,Romain,follows the theme decision (rules gave no zone)
+9,direction,Israel x Egypt sever diplomatic relations before February?,+1,-1,+1,Claude,severing diplomatic relations is escalation (+1); rules read it as de-escalation
+12,direction,Will Korean opposition leader Lee Jae-myung be banned again from running in the next presidential election?,-1,0,-1,Claude,outcome against the more expansionary candidate (Lee; Lula vs right): -1
+13,theme,Will Russia capture Rodynske by August 20?,GEOPOLITICS,OTHER,GEOPOLITICS,Romain,"military, diplomatic or regime event: geopolitics"
+13,zone,Will Russia capture Rodynske by August 20?,GLOBAL,,GLOBAL,Romain,follows the theme decision (rules gave no zone)
+13,direction,Will Russia capture Rodynske by August 20?,+1,0,+1,Romain,"follows the theme decision (geopolitics, labeller sign)"
+15,zone,Will Tarcisio de Frietas win the 2026 Brazilian presidential election?,BR,US,BR,Romain,"foreign election: zone of the country, not US"
+15,direction,Will Tarcisio de Frietas win the 2026 Brazilian presidential election?,-1,0,-1,Claude,outcome against the more expansionary candidate (Lee; Lula vs right): -1
+16,zone,"Will it be reported by any of the Source Agencies that the bilateral U.S.–Saudi agreement for peaceful nuclear cooperation under Section 123 of the Atomic Energy Act has entered into force and become legally operative between the two governments before Jan 1, 2027?",GLOBAL|US,GLOBAL,GLOBAL|US,Romain,US directly involved: GLOBAL|US
+17,zone,Will a Russian sanctions bill become law before 2027?,GLOBAL|US,GLOBAL,GLOBAL|US,Romain,US directly involved: GLOBAL|US
+19,theme,Will Republican win the House race for TX-17?,FISCAL_POLITICAL,OTHER,OTHER,Romain,"no clear macro channel (single seat, party ban appeal, Greenland, EC margin)"
+22,direction,Biden resigns from presidency by August 31?,0,1,0,Claude,leader exit or regime survival with no clear policy consequence: 0 per the guide
+24,theme,Will Gold close below $3200 at the end of 2025?,OTHER,GEOPOLITICS,OTHER,Romain,"no macro channel; rule fired on a keyword (election, President, strike(s), bomb, out as)"
+26,direction,Ukraine joins NATO before 2027?,+1,0,+1,Claude,"NATO entry in wartime, takeover, Article 5, use-of-force authorisation: escalation +1"
+27,theme,Will NJ Transit workers go on strike?,OTHER,GEOPOLITICS,OTHER,Romain,"no macro channel; rule fired on a keyword (election, President, strike(s), bomb, out as)"
+29,direction,Will monthly inflation increase by 0.1% or less in January?,-1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+31,direction,Will annual inflation increase by 2.9% or more in January?,+1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+34,direction,Will the ECB announce no change at the December meeting?,B,0,B,Claude,option of a mutually exclusive set (guide definition of B); rules did not detect the set
+36,direction,Will Jerome Powell depart as Fed Chair between June 13 and June 19?,B,0,B,Claude,option of a mutually exclusive set (guide definition of B); rules did not detect the set
+37,direction,Will the Bank of Mexico Hike more than 50bps at the May Bank of Mexico Governing Board meeting?,+1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+40,theme,Maduro leaves Venezuela by December 31?,GEOPOLITICS,OTHER,GEOPOLITICS,Romain,"military, diplomatic or regime event: geopolitics"
+40,zone,Maduro leaves Venezuela by December 31?,GLOBAL,,GLOBAL,Romain,follows the theme decision (rules gave no zone)
+42,zone,Who will win the next Hungarian general election?,HU,US,HU,Romain,"foreign election: zone of the country, not US"
+44,direction,Will 175 or more ships transit the Strait of Hormuz between July 13-July 19?,-1,0,-1,Claude,more Hormuz transits / presidential visit: normalisation -1
+53,direction,"Will any measure primarily about ending or limiting U.S. import tariffs on any country or group of countries passed the Senate before Dec 1, 2025?",-1,1,-1,Claude,ending or limiting tariffs is less restriction (-1); rules read it as tariff up
+54,direction,Will the Federal Reserve Cut rates by >25bps at their October 2025 meeting?,-1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+55,direction,Will South African inflation be less than 2.6% in 2026?,-1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+57,zone,"Will it be reported by any of the Source Agencies that the additional 50% tariffs established by President Donald Trump’s three July 20, 2026 Section 338 proclamations begin applying to covered Canadian goods on August 19, 2026 before Aug 20, 2026?",CA|US,US,CA|US,Romain,tariffs: US plus named counterpart; non-US deal: their zones only
+58,theme,Trump conviction overturned before election?,OTHER,FISCAL_POLITICAL,OTHER,Romain,"no macro channel; rule fired on a keyword (election, President, strike(s), bomb, out as)"
+61,direction,Will Maduro's rule survive a US military engagement?,0,1,0,Claude,leader exit or regime survival with no clear policy consequence: 0 per the guide
+63,zone,Will Trump impose tariffs on the EU auto sector in the first 100 days?,EA|US,US,EA|US,Romain,tariffs: US plus named counterpart; non-US deal: their zones only
+69,theme,"Will Ruben Gallego be out as Senator before Oct 1, 2026?",OTHER,FISCAL_POLITICAL,OTHER,Romain,"no macro channel; rule fired on a keyword (election, President, strike(s), bomb, out as)"
+71,theme,German government files appeal to ban AfD in 2025?,FISCAL_POLITICAL,OTHER,OTHER,Romain,"no clear macro channel (single seat, party ban appeal, Greenland, EC margin)"
+72,zone,Will Flávio Bolsonaro receive at least 29% of the popular vote in the first round of the 2026 Brazilian presidential election?,BR,US,BR,Romain,"foreign election: zone of the country, not US"
+72,direction,Will Flávio Bolsonaro receive at least 29% of the popular vote in the first round of the 2026 Brazilian presidential election?,-1,0,-1,Claude,outcome against the more expansionary candidate (Lee; Lula vs right): -1
+73,direction,Will the European Central Bank Cut more than 25bps at the July ECB Governing Council monetary policy meeting?,-1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+83,theme,Will Greenland vote for independence before 2027?,FISCAL_POLITICAL,OTHER,OTHER,Romain,"no clear macro channel (single seat, party ban appeal, Greenland, EC margin)"
+85,theme,Will the electoral college margin of victory be above 214 for Democratic?,FISCAL_POLITICAL,OTHER,OTHER,Romain,"no clear macro channel (single seat, party ban appeal, Greenland, EC margin)"
+86,direction,Fed decreases interest rates by 50+ bps after June 2024 meeting?,-1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+87,theme,Will Trump make 0 trips to Mar-a-Lago as President in Jun 2026?,OTHER,FISCAL_POLITICAL,OTHER,Romain,"no macro channel; rule fired on a keyword (election, President, strike(s), bomb, out as)"
+88,direction,"Will the tariff rate on India imports be below 20% on Jan 1, 2026?",-1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+90,direction,How many dissenting votes at the next Fed meeting?,B,0,B,Claude,option of a mutually exclusive set (guide definition of B); rules did not detect the set
+91,zone,China-Vietnam trade deal before June?,CN,US|CN,CN,Romain,tariffs: US plus named counterpart; non-US deal: their zones only
+92,direction,Will the ECB announce a 25 bps decrease at the June meeting?,B,-1,B,Claude,option of a mutually exclusive set (guide definition of B); rules did not detect the set
+94,theme,Was the Cybertruck bombing a lone wolf attack?,OTHER,GEOPOLITICS,OTHER,Romain,"no macro channel; rule fired on a keyword (election, President, strike(s), bomb, out as)"
+96,direction,Will 0 reconciliation bills be passed in 2027?,B,0,B,Claude,option of a mutually exclusive set (guide definition of B); rules did not detect the set
+97,theme,Will Russia capture Vuhledar before October? ,GEOPOLITICS,OTHER,GEOPOLITICS,Romain,"military, diplomatic or regime event: geopolitics"
+97,zone,Will Russia capture Vuhledar before October? ,GLOBAL,,GLOBAL,Romain,follows the theme decision (rules gave no zone)
+97,direction,Will Russia capture Vuhledar before October? ,+1,0,+1,Romain,"follows the theme decision (geopolitics, labeller sign)"
+98,direction,Fed decreases interest rates by 50+ bps after September 2025 meeting?,-1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+99,direction,Will the Bank of Korea make no change to the base rate after the April Meeting?,B,0,B,Claude,option of a mutually exclusive set (guide definition of B); rules did not detect the set
+100,theme,Will Trump recognize Somaliland?,GEOPOLITICS,OTHER,GEOPOLITICS,Romain,"military, diplomatic or regime event: geopolitics"
+100,zone,Will Trump recognize Somaliland?,GLOBAL|US,,GLOBAL|US,Romain,US directly involved: GLOBAL|US
+101,zone,Will the U.S. take over Gaza in 2025?,GLOBAL|US,GLOBAL,GLOBAL|US,Romain,US directly involved: GLOBAL|US
+101,direction,Will the U.S. take over Gaza in 2025?,+1,0,+1,Claude,"NATO entry in wartime, takeover, Article 5, use-of-force authorisation: escalation +1"
+102,zone,Will the Conservative party win the most seats in the 2025 Norwegian parliamentary election?,NO,US,NO,Romain,"foreign election: zone of the country, not US"
+109,theme,"Will Xi meet with Takaichi by July 31, 2026?",GEOPOLITICS,OTHER,GEOPOLITICS,Romain,"military, diplomatic or regime event: geopolitics"
+109,zone,"Will Xi meet with Takaichi by July 31, 2026?",CN|GLOBAL|JP,,CN|GLOBAL|JP,Romain,follows the theme decision (rules gave no zone)
+109,direction,"Will Xi meet with Takaichi by July 31, 2026?",-1,0,-1,Romain,"follows the theme decision (geopolitics, labeller sign)"
+116,zone,"U.S. x Iran Military Engagement by June 30, 2026?",GLOBAL|US,GLOBAL,GLOBAL|US,Romain,US directly involved: GLOBAL|US
+117,direction,Will Bank of Canada Hike rates by >25bps at their October 2026 meeting?,+1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+119,theme,"Kim Jong Un out as Supreme Leader of North Korea by December 31, 2026?",GEOPOLITICS,FISCAL_POLITICAL,GEOPOLITICS,Romain,regime change in North Korea: geopolitics
+119,zone,"Kim Jong Un out as Supreme Leader of North Korea by December 31, 2026?",GLOBAL,,GLOBAL,Romain,follows the theme decision (rules gave no zone)
+119,direction,"Kim Jong Un out as Supreme Leader of North Korea by December 31, 2026?",0,1,-1,Romain,leader out read as lower tension
+120,theme,Israeli forces enter Lebanon before November?,GEOPOLITICS,OTHER,GEOPOLITICS,Romain,"military, diplomatic or regime event: geopolitics"
+120,zone,Israeli forces enter Lebanon before November?,GLOBAL,,GLOBAL,Romain,follows the theme decision (rules gave no zone)
+120,direction,Israeli forces enter Lebanon before November?,+1,0,+1,Romain,"follows the theme decision (geopolitics, labeller sign)"
+125,direction,Will annual inflation increase by ≥3.2% in November?,+1,B,B,Claude,open-ended end bucket of a complete mutually exclusive set; rules value it inside the set with the right sign
+126,direction,"Will Angus King vote for the next omnibus spending bill, minibus, or government-wide continuing resolution (CR)?",-1,0,-1,Claude,"funding vote / balanced budget: less fiscal risk, -1"
+132,theme,Will Jared Kushner have a diplomatic meeting with Iran by May 31?,GEOPOLITICS,OTHER,GEOPOLITICS,Romain,"military, diplomatic or regime event: geopolitics"
+132,zone,Will Jared Kushner have a diplomatic meeting with Iran by May 31?,GLOBAL|US,,GLOBAL|US,Romain,US directly involved: GLOBAL|US
+132,direction,Will Jared Kushner have a diplomatic meeting with Iran by May 31?,-1,0,-1,Romain,"follows the theme decision (geopolitics, labeller sign)"
+134,zone,NATO article 5 in 2025?,CA|EA|GLOBAL|NO|UK|US,GLOBAL,CA|EA|GLOBAL|NO|UK|US,Romain,NATO Article 5: every listed NATO zone
+134,direction,NATO article 5 in 2025?,+1,0,+1,Claude,"NATO entry in wartime, takeover, Article 5, use-of-force authorisation: escalation +1"
+135,zone,Will Trump impose a blanket tariff of less than 10% on the EU by June 30?,EA|US,US,EA|US,Romain,tariffs: US plus named counterpart; non-US deal: their zones only
+137,zone,NATO article 5 before March?,CA|EA|GLOBAL|NO|UK|US,GLOBAL,CA|EA|GLOBAL|NO|UK|US,Romain,NATO Article 5: every listed NATO zone
+137,direction,NATO article 5 before March?,+1,0,+1,Claude,"NATO entry in wartime, takeover, Article 5, use-of-force authorisation: escalation +1"
+140,zone,Will Centre Party finish 4th in the 2026 Swedish general election?,SE,US,SE,Romain,"foreign election: zone of the country, not US"
+144,direction,"Will there be more than 45 transit calls through the Strait of Hormuz from Sep 21, 2026 to Sep 27, 2026?",-1,0,-1,Claude,more Hormuz transits / presidential visit: normalisation -1
+147,zone,Which Canadian party leaders will resign after this year's election?,CA,US,CA,Romain,"foreign election: zone of the country, not US"
+147,direction,Which Canadian party leaders will resign after this year's election?,0,1,0,Claude,leader exit or regime survival with no clear policy consequence: 0 per the guide
+166,direction,Will Trump visit Gaza by Oct 31?,-1,0,-1,Claude,more Hormuz transits / presidential visit: normalisation -1
+167,direction,Congress authorizes military force against Venezuela by January 31?,+1,0,+1,Claude,"NATO entry in wartime, takeover, Article 5, use-of-force authorisation: escalation +1"
+168,direction,Mahmoud Abbas out as Palestinian President by December 31?,0,1,0,Claude,leader exit or regime survival with no clear policy consequence: 0 per the guide
+174,zone,Will anyone win the 2026 Colombian presidential election in the first round?,CO,US,CO,Romain,"foreign election: zone of the country, not US"
+176,direction,Will Trump balance the budget?,-1,0,-1,Claude,"funding vote / balanced budget: less fiscal risk, -1"
+180,direction,Will the Bank of Japan Maintain current rate at the Dec 2025 BOJ meeting?,B,0,B,Claude,option of a mutually exclusive set (guide definition of B); rules did not detect the set
+182,zone,"U.S. anti-cartel strike/operation on foreign soil by January 31, 2026?",GLOBAL|US,GLOBAL,GLOBAL|US,Romain,US directly involved: GLOBAL|US
+185,direction,Will Turkey schedule early presidential elections in 2026?,+1,0,+1,Claude,"early election / invalidated election: more political-fiscal risk, +1"
+186,direction,Will Headline be Exactly -0.1% AND Core be 0.1% or below for Jun 2026?,B,-1,B,Claude,option of a mutually exclusive set (guide definition of B); rules did not detect the set
+190,theme,Hunter Biden in jail before election day?,OTHER,FISCAL_POLITICAL,OTHER,Romain,"no macro channel; rule fired on a keyword (election, President, strike(s), bomb, out as)"
+194,direction,Peru Presidential Election Invalidated?,+1,0,+1,Claude,"early election / invalidated election: more political-fiscal risk, +1"

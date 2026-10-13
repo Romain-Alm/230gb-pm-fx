@@ -9,10 +9,32 @@ scratch/
 # Secrets (FRED API key and any other local credential)
 config/secrets*
 
-# Licensed raw data (Bloomberg delivery, Dukascopy, FRED, ECB, IRR file)
-data/raw/
+# Raw data: not versioned, except the public hourly FX file used by the weekend and lead-lag tests.
+# The Bloomberg/WRDS market file and its QC flags are licensed: shared with the instructor only
+# (README, "Data").
+data/raw/*
+!data/raw/intraday/
+data/raw/intraday/*
+!data/raw/intraday/dukascopy_hourly.parquet
 
-# Confidential, not distributed: prediction-market panels derived from the Probalytics data
-# (Kairos industry project) and the Kairos classification code. See README, "Data".
-data/processed/
-src/pm/vendor/
+# Processed data: rebuilt by run_all.py, except the four panels read from the raw prediction-market
+# trades tape (about 75 GB, not shared), which are the starting point of a rerun.
+data/processed/*
+!data/processed/pm_markets.parquet
+!data/processed/pm_daily.parquet
+!data/processed/weekend_changes.parquet
+!data/processed/hourly_index.parquet
+
+# Kairos code: only the geographic resolver used by the classification is shared.
+src/pm/vendor/classifier_v2.py
+
+# Working notes and validation templates (not part of the replication package)
+progress/
+ai_log/classification/VALIDATION_INSTRUCTIONS.txt
+ai_log/classification/validation_sheet.csv
+ai_log/classification/validation_sheet_[0-9].csv
+ai_log/classification/validation_sheet_merged.csv
+ai_log/classification/validation_merged*.csv
+
+# Internal decision log (not part of the submission)
+DECISIONS.md

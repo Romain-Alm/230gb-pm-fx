@@ -1,0 +1,19 @@
+ccy,irr_fine_code,irr_label,primary_universe,coarse12_variant
+BRL,12.0,managed floating,True,True
+MXN,13.0,freely floating,True,True
+COP,12.0,managed floating,True,True
+CLP,12.0,managed floating,True,True
+PEN,8.0,de facto crawling band <= 2%,False,False
+ZAR,13.0,freely floating,True,True
+TRY,14.0,freely falling,False,False
+PLN,11.0,moving band <= 2%,False,True
+HUF,8.0,de facto crawling band <= 2%,False,False
+CZK,4.0,de facto peg,False,False
+IDR,8.0,de facto crawling band <= 2%,False,False
+INR,11.0,moving band <= 2%,False,True
+KRW,12.0,managed floating,True,True
+TWD,,not in IRR database,False,False
+THB,11.0,moving band <= 2%,False,True
+PHP,8.0,de facto crawling band <= 2%,False,False
+MYR,11.0,moving band <= 2%,False,True
+CNH,3.0,pre-announced horizontal band <= 2%,False,False

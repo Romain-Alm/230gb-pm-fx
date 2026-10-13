@@ -40,7 +40,10 @@ def _save(fig, out, name, data: pd.DataFrame):
     fig.savefig(out / f"{name}.svg")
     plt.close(fig)
     (out / "data").mkdir(exist_ok=True)
-    data.to_csv(out / "data" / f"{name}.csv", index=isinstance(data.index, pd.DatetimeIndex))
+    if isinstance(data.index, pd.DatetimeIndex):
+        data = data.rename_axis("date")
+    # Keep a named index (date, zone, currency) as the first column, so the data file is self-describing.
+    data.to_csv(out / "data" / f"{name}.csv", index=data.index.name is not None)
 
 
 def _cum(r: pd.Series) -> pd.Series:

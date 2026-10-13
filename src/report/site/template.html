@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prediction markets and currency strategies</title>
+<meta name="description" content="MFE 230GB final project: do Kalshi and Polymarket carry information that helps trade currencies, and where does that information sit? Two strategies, their results, risks and robustness, with every number rebuilt from the replication package.">
+<style>{{CSS}}</style>
+<script>(function () { var t = 'dark'; try { t = localStorage.getItem('theme') || t; } catch (e) {} document.documentElement.setAttribute('data-theme', t); })();</script>
+</head>
+<body>
+<a class="skip" href="#s1">Skip to content</a>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#top">Prediction markets and FX</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#s1">Idea</a><a href="#s2">Data</a><a href="#s3">Coverage</a><a href="#s4">Signals</a><a href="#s5">Timing</a>
+      <a href="#s6">Strategy A</a><a href="#s7">Strategy B</a><a href="#s8">Risk</a><a href="#s9">Robustness</a><a href="#s10">Protocol</a>
+    </nav>
+    <button class="theme-btn" id="theme-btn" type="button" aria-label="Switch between light and dark theme">Light</button>
+  </div>
+  <div class="progress" id="progress"></div>
+</header>
+
+<nav class="rail" aria-label="Progress through the sections"><div class="rail-track"><div class="rail-fill" id="rail-fill"></div></div><ol id="rail-list"></ol></nav>
+<main id="top">
+
+<!-- ====================================================================== hero -->
+<section class="hero" style="--sc: var(--s1)">
+  <div class="kicker">MFE 230GB, Currency Markets, Berkeley Haas, final project, October 2026</div>
+  <h1>Prediction markets and currency strategies</h1>
+  <p class="question">Do Kalshi and Polymarket carry information that helps trade currencies, and where does that information sit?</p>
+  <p class="meta">Romain Almeida, Piero Pelosi, Hino Wirachapong, Thomas Claudel. Sample {{sample_start}} to {{sample_end}}; in-sample 2024-2025, out-of-sample from {{oos_start}}. Every primary rule was logged before its backtest; post hoc additions are labelled. The page complements the 8 October 2026 presentation; one command rebuilds it from the replication package.</p>
+  <p class="intro">Prediction markets trade the odds of events: a Fed cut, an election, a ceasefire. From {{pm_markets}} contracts we build one daily index per country and theme, and test the indices in two strategies: a G10 dollar strategy driven by US policy odds (Strategy A) and an emerging-market carry timed by a global geopolitical index (Strategy B).</p>
+  <h3 class="results-head">Three results</h3>
+  <div class="grid grid-3 answer-cards">
+    <div class="card accent">
+      <h3>Timing</h3>
+      <p class="big">Prediction markets move with currencies, not before them.</p>
+      <div class="spark" id="spark-timing" aria-hidden="true"></div>
+      <p>Same day: US monetary news and the dollar move together (t = {{t_mon_0}}). Next day: nothing (t = {{t_mon_1}}). Weekend test: nothing either (largest |t| = {{wk_max_t}} in its pre-registered specification). <a href="#s5">Section 5</a></p>
+    </div>
+    <div class="card accent">
+      <h3>Content</h3>
+      <p class="big">The usable FX information is about the dollar.</p>
+      <div class="spark" id="spark-content" aria-hidden="true"></div>
+      <p>Only three zone-theme cells are liquid enough for signals: US monetary, US fiscal-political and global geopolitics. So Strategy A is a dollar strategy: net Sharpe {{a1_net}}<sup>*</sup>, gross {{a1_gross}}, not significant. <a href="#s3">Section 3</a>, <a href="#s6">section 6</a></p>
+      <p class="star-note">* Conservative cost assumption: half the Bloomberg composite forward bid-ask, probably wider than dealable G10 spreads. At half these costs the net Sharpe is {{a1c_net}} (a posteriori scenario).</p>
+    </div>
+    <div class="card accent">
+      <h3>Carry</h3>
+      <p class="big">EM carry earns a premium; the overlay adds nothing robust.</p>
+      <div class="spark" id="spark-carry" aria-hidden="true"></div>
+      <p>Net Sharpe {{bc_net}} for the base carry, {{pm_net}} with the prediction-market overlay. The whole gain comes from one contract in one month; without it the overlay falls to {{we_net}}, below plain carry. <a href="#s7">Section 7</a></p>
+    </div>
+  </div>
+  <details class="more plan">
+    <summary>How this page is organised</summary>
+    <div class="body">
+      <ol class="plan-list">
+        <li><b>Sections 1 to 4</b>: course mechanisms, data pipeline, which country-theme cells are liquid enough to use, and signal construction (worked example).</li>
+        <li><b>Section 5</b>: does the information lead the currency? Daily, weekend and hourly tests.</li>
+        <li><b>Sections 6 and 7</b>: Strategies A and B (rules, results, variants).</li>
+        <li><b>Sections 8 and 9</b>: losing periods, factor exposures, and placebo, grid and cost checks.</li>
+        <li><b>Section 10</b>: the research protocol, what the data do not support, and how to replicate.</li>
+      </ol>
+      <p>Blue marks Strategy A, orange Strategy B. Tables and details unfold on demand.</p>
+    </div>
+  </details>
+  <div class="legend-badges">
+    <span>How to read the labels:</span>
+    <span><span class="badge badge-pre">pre-registered</span> rule fixed before any backtest</span>
+    <span><span class="badge badge-post">a posteriori</span> added after seeing the definitive results</span>
+    <span><span class="badge badge-exp">exploratory</span> a lead, not a result</span>
+    <span><span class="badge badge-bench">benchmark</span> comparison rule, not a candidate</span>
+  </div>
+</section>
+
+<!-- ====================================================================== 1. idea -->
+<section class="sec" id="s1" style="--sc: var(--s1)">
+  <div class="kicker">1. Economic framework</div>
+  <h2>Three course mechanisms set the sign of every trade</h2>
+  <p class="claim">No trading rule is estimated: the theory below sets each position's direction, so nothing can be overfitted. Pick a mechanism.</p>
+  <div class="mech" id="mech">
+    <div class="mech-tabs" role="tablist" aria-label="Mechanisms">
+      <button class="mech-tab" type="button" role="tab" id="mech-tab-carry" data-m="carry" style="--mc: var(--s2)" aria-selected="true"><span class="mech-num">1</span><span class="mech-txt"><b>Carry and the failure of UIP</b><small>the premium that Strategy B collects</small></span></button>
+      <button class="mech-tab" type="button" role="tab" id="mech-tab-dominance" data-m="dominance" style="--mc: var(--s1)" aria-selected="false"><span class="mech-num">2</span><span class="mech-txt"><b>Monetary vs fiscal dominance</b><small>the signs of Strategy A</small></span></button>
+      <button class="mech-tab" type="button" role="tab" id="mech-tab-tot" data-m="tot" style="--mc: var(--s2)" aria-selected="false"><span class="mech-num">3</span><span class="mech-txt"><b>Terms of trade</b><small>why the overlay of B fails</small></span></button>
+    </div>
+
+    <div class="mech-panel" id="mech-carry" style="--mc: var(--s2)" role="tabpanel">
+      <div class="mech-cols">
+        <div>
+          <h3>What the theory says</h3>
+          <p class="formula">rx &asymp; (i* &minus; i) + &Delta;s</p>
+          <p>The excess return on a currency is its rate <i>i*</i> minus the dollar rate <i>i</i>, plus its appreciation <i>&Delta;s</i>. Uncovered interest parity (UIP) says E[&Delta;s] = i &minus; i*, so carry should earn nothing.</p>
+          <div class="chain"><span class="box">UIP holds</span><span class="arrow">&rarr;</span><span class="box">high-rate currency falls by the rate gap</span><span class="arrow">&rarr;</span><span class="box">carry = 0</span></div>
+        </div>
+        <div>
+          <h3>What the data say</h3>
+          <p>High-rate currencies fall by less than the rate gap. The literature reads the resulting carry premium as compensation for crash risk: carry loses in bursts during global risk-off episodes, when investors can least afford it.</p>
+          <div class="chain"><span class="box">UIP fails</span><span class="arrow">&rarr;</span><span class="box">high-rate currency falls by less</span><span class="arrow">&rarr;</span><span class="box">carry earns a premium</span><span class="arrow">&rarr;</span><span class="box">paid for bearing crash risk</span></div>
+        </div>
+      </div>
+      <p class="mech-use"><b>Used in Strategy B.</b> Rank six floating EM currencies by one-month forward premium (the rate gap); hold the top two against the bottom two. Can prediction markets see the crashes coming? <a href="#s7">Section 7</a></p>
+    </div>
+
+    <div class="mech-panel" id="mech-dominance" style="--mc: var(--s1)" role="tabpanel" hidden>
+      <p>Two kinds of news move the dollar in Strategy A. <b>Monetary news</b> is simple: a hawkish shift in expected Fed policy raises US rates and the dollar in every regime. <b>Fiscal news</b> depends on who controls the price level.</p>
+      <div class="table-scroll"><table class="data mech-table">
+        <thead><tr><th></th><th>Monetary dominance</th><th>Fiscal dominance</th></tr></thead>
+        <tbody>
+          <tr><th>Who leads</th><td class="txt">The central bank sets rates freely; the Treasury adjusts.</td><td class="txt">The deficit is expected to be accommodated: the central bank will keep rates low or let inflation erode the debt.</td></tr>
+          <tr><th>A bigger deficit means</th><td class="txt">More bonds to sell, so higher yields; the currency is still a safe store of value.</td><td class="txt">A risk premium on the country's assets: yields rise too, but as compensation for the risk of inflation or default.</td></tr>
+          <tr><th>Capital</th><td class="txt">Flows in, attracted by the higher yields.</td><td class="txt">Leaves, despite the higher yields.</td></tr>
+          <tr><th>Currency</th><td class="txt pos">Rises.</td><td class="txt neg">Falls.</td></tr>
+          <tr><th>Tell-tale sign</th><td class="txt">Yields and the currency move together.</td><td class="txt">Yields up, currency down: the "sell everything" pattern.</td></tr>
+          <tr><th>Examples</th><td class="txt">The United States most of the time.</td><td class="txt">The United Kingdom in September 2022; the United States in April and May 2025.</td></tr>
+          <tr><th>In Strategy A, higher odds of a fiscal expansion mean</th><td class="txt pos">Long the dollar.</td><td class="txt neg">Short the dollar.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="mech-cols">
+        <div class="chain"><span class="box">deficit odds &uarr;</span><span class="arrow">&rarr;</span><span class="box">yields &uarr;, capital in</span><span class="arrow">&rarr;</span><span class="box">dollar &uarr;</span><span class="chain-lab">monetary dominance</span></div>
+        <div class="chain"><span class="box">deficit odds &uarr;</span><span class="arrow">&rarr;</span><span class="box">risk premium, capital out</span><span class="arrow">&rarr;</span><span class="box">dollar &darr;</span><span class="chain-lab">fiscal dominance</span></div>
+      </div>
+      <p class="mech-use"><b>How the regime is detected.</b> A negative rolling 60-day correlation between daily changes in the 10-year yield and in the currency signals fiscal dominance. The indicator flipped to the fiscal sign on {{regime_days_25}} days of 2025 ({{regime_share_25}}) and never in 2024 or 2026, so Strategy A effectively ran with the monetary-dominance sign. <a href="#s6">Section 6</a></p>
+    </div>
+
+    <div class="mech-panel" id="mech-tot" style="--mc: var(--s2)" role="tabpanel" hidden>
+      <div class="mech-cols">
+        <div>
+          <h3>Exporters</h3>
+          <div class="chain"><span class="box">oil &uarr;</span><span class="arrow">&rarr;</span><span class="box">more dollars earned</span><span class="arrow">&rarr;</span><span class="box">BRL, MXN, COP &uarr;</span></div>
+          <p>Higher prices for what a country sells improve its terms of trade: more export revenue, a stronger currency.</p>
+        </div>
+        <div>
+          <h3>Importers</h3>
+          <div class="chain"><span class="box">oil &uarr;</span><span class="arrow">&rarr;</span><span class="box">bigger energy bill</span><span class="arrow">&rarr;</span><span class="box">KRW &darr;</span></div>
+          <p>Higher prices for what a country buys worsen its terms of trade and weaken its currency.</p>
+        </div>
+      </div>
+      <p class="mech-use"><b>Why it matters here.</b> Strategy B's carry book is long BRL, MXN and COP and short KRW and CLP, so it is long oil. In our window the oil exposure came from the short KRW and CLP legs and from COP; BRL and MXN moved little with Brent. Middle East escalation lifts oil, so the book gains from the very shocks the overlay was built to cut. <a href="#s7-why">Section 7</a></p>
+    </div>
+  </div>
+
+  <details class="more">
+    <summary>Other course concepts used on this page</summary>
+    <div class="body">
+      <dl class="kv">
+        <dt>IRR regime classification</dt><dd>Strategy B's EM universe keeps only managed or freely floating currencies (Ilzetzki, Reinhart and Rogoff fine codes 12 and 13). Pegs and bands are excluded: their low volatility hides the real risk, a devaluation.</dd>
+        <dt>CIP and forward pricing</dt><dd>Carry comes from one-month forward and NDF points; the FX excess return is the spot change plus the forward-implied carry.</dd>
+        <dt>Downside-risk CAPM</dt><dd>Section 8 reports normal and downside betas (Lettau, Maggiori and Weber) to equities and to an EM carry factor.</dd>
+        <dt>Efficient markets</dt><dd>Section 5 finds that prediction-market moves do not lead the dollar at daily, weekend or hourly horizons, as efficiency predicts for liquid G10 FX.</dd>
+      </dl>
+    </div>
+  </details>
+</section>
+
+<!-- ====================================================================== 2. data -->
+<section class="sec" id="s2" style="--sc: var(--s1)">
+  <div class="kicker">2. Data pipeline</div>
+  <h2>From {{pm_markets}} contracts to daily theme indices</h2>
+  <p class="claim">Five steps turn {{pm_markets}} traded markets ({{pm_kalshi}} on Kalshi, {{pm_polymarket}} on Polymarket; USD {{pm_volume_bn}} billion of volume, {{sample_start}} to {{sample_end}}) into one daily index per country and theme.</p>
+  <div class="steps">
+    <div class="step"><h4>Contracts</h4><p>Every market with trades on Kalshi and Polymarket, sampled daily.</p><span class="ex">"Fed cut in December?" at 62 cents = 62%</span></div>
+    <div class="step"><h4>Classify</h4><p>Theme, zone and direction from fixed text rules, no language model, fully reproducible. Hand labels on {{val_n}} markets agree on the theme {{val_theme}}% of the time.</p><span class="ex">US, monetary, direction &minus;1 (a cut is dovish)</span></div>
+    <div class="step"><h4>Hazard rate</h4><p>Deadline contracts drift to zero over time; the implied hazard rate removes the drift.</p><span class="ex">"Ceasefire by 31 January": &lambda; = &minus;ln(1 &minus; p) / &tau;</span></div>
+    <div class="step"><h4>Standardise</h4><p>Daily move divided by the contract's usual move (EWMA volatility, span {{vol_span}} days), signed by direction, winsorised at {{winsor}} sd.</p><span class="ex">Cut odds +2 points, usual move 1 point: &minus;2</span></div>
+    <div class="step"><h4>Average</h4><p>Volume-weighted across a zone-theme cell's contracts, summed over days.</p><span class="ex">All US monetary bets: one index</span></div>
+  </div>
+  <details class="more">
+    <summary>Snapshot timing, eligibility, themes and zones</summary>
+    <div class="body">
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Timing, with no look-ahead</h3>
+      <p>Prices are taken at the last trade before {{snapshot_time}} London; a contract with no trade for {{stale_hours}} hours is stale. A day-t signal trades at the New York close of t, six hours later (next Asian close for KRW). A contract needs USD {{min_volume_k}}k of weekly volume and {{min_days}} to {{max_days}} days to resolution.</p>
+    </div>
+    <div class="card">
+      <h3>Themes and zones</h3>
+      <p>Five themes (monetary, inflation, fiscal-political, tariffs, geopolitics). Zones: the G10, the main EM currencies, China, and a global zone for conflicts not tied to one country. Direction says whether a higher probability is hawkish or dovish, escalation or de-escalation.</p>
+    </div>
+  </div>
+
+    </div>
+  </details>
+  <div class="fig" id="fig-hazard-wrap">
+    <p class="fig-title">Why a hazard rate and not the raw probability: a real contract</p>
+    <p class="fig-sub">"{{walk_title}}" ({{walk_platform}}), traded from {{walk_first}} to its {{walk_deadline}} deadline. Top: traded probability. Bottom: implied hazard rate, the chance per year of the event given it has not happened yet.</p>
+    <div class="plot tall" id="fig-hazard-real"></div>
+    <p class="fig-caption">With constant risk, the probability of "a ceasefire by 31 December" must fall as the days run out, while the hazard rate stays flat. Read raw, every quiet week would score as escalation. Shading marks the section 4 example.</p>
+    <details class="more">
+      <summary>Try the formula: a constant hazard and a moving deadline</summary>
+      <div class="body">
+        <div class="controls">
+          <label>Probability today <input type="range" id="hz-p" min="5" max="95" value="40" step="1"> <span class="readout" id="hz-p-out"></span></label>
+          <label>Days to the deadline <input type="range" id="hz-tau" min="5" max="365" value="90" step="1"> <span class="readout" id="hz-tau-out"></span></label>
+          <span>Implied hazard rate: <span class="readout" id="hz-out"></span> per day</span>
+        </div>
+        <div class="plot short" id="fig-hazard"></div>
+        <p class="fig-caption">Raw probability of a contract with this constant hazard, from today to the deadline.</p>
+      </div>
+    </details>
+  </div>
+
+  <details class="more">
+    <summary>What the classifier keeps, and a sample of contracts with the rule that fired</summary>
+    <div class="body">
+  <div class="fig">
+    <p class="fig-title">What the classifier keeps</p>
+    <p class="fig-sub">Markets with trades by theme and platform. Hover a bar for the share with a usable direction or bucket.</p>
+    <div class="plot short" id="fig-class"></div>
+    <p class="fig-caption">"Other" is non-macro (sports, entertainment, crypto prices). Election markets dominate the fiscal-political theme by count; only markets a rule can sign get a direction.</p>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Contract explorer: the rules are legible</p>
+    <p class="fig-sub">A random sample of classified contracts with the rule that fired. Filter by theme or platform.</p>
+    <div class="controls" id="ex-filters"></div>
+    <div class="table-scroll"><table class="data" id="tbl-examples"></table></div>
+  </div>
+    </div>
+  </details>
+</section>
+
+<!-- ====================================================================== 3. coverage -->
+<section class="sec" id="s3" style="--sc: var(--s1)">
+  <div class="kicker">3. Coverage gate</div>
+  <h2>Prediction markets speak about the United States and the world</h2>
+  <p class="claim">A cell is tradable only if liquid contracts existed on at least {{gate_pct}}% of weekdays in 2024-2025. Three cells pass. Drag the gate: any cutoff from {{gate_low}}% to {{gate_high}}% keeps the same three.</p>
+  <div class="fig">
+    <p class="fig-title">Share of weekdays with liquid contracts, zone by theme</p>
+    <div class="controls">
+      <label>Gate <input type="range" id="gate" min="0" max="100" step="1"> <span class="readout" id="gate-out"></span></label>
+      <span class="seg" id="cov-period"><button aria-pressed="true" data-v="share_train">2024-2025 (training)</button><button aria-pressed="false" data-v="share_test">2026</button></span>
+      <span class="seg" id="cov-threshold"><button aria-pressed="true" data-v="cells">USD 50k</button><button aria-pressed="false" data-v="cells_10k">USD 10k</button></span>
+      <span class="readout" id="gate-count"></span>
+    </div>
+    <div class="table-scroll"><table class="data heat" id="tbl-coverage"></table></div>
+    <p class="fig-caption">Orange-ringed cells pass the gate; the rest fade. A square-root colour scale keeps small shares visible. The rule (USD {{min_volume_k}}k of weekly volume on {{gate_pct}}% of weekdays) was set before any backtest. At USD 10k, {{n_kept_10k}} cells would pass the same rule, including China geopolitics ({{cov10_cn_geo}}) and US geopolitics ({{cov10_us_geo}}). Strategy A2 uses that threshold with no gate: every G10-zone monetary, inflation and fiscal-political cell, active whenever it has contracts. Geopolitics and tariffs stay with Strategy B.</p>
+  </div>
+  <div class="grid grid-3">
+    <div class="stat"><div class="stat-label">US monetary</div><div class="stat-value">{{cov_us_mon}}</div><div class="stat-sub">of weekdays, 2024-2025. Kept.</div></div>
+    <div class="stat"><div class="stat-label">Global geopolitics</div><div class="stat-value">{{cov_glob_geo}}</div><div class="stat-sub">Kept, goes to Strategy B.</div></div>
+    <div class="stat"><div class="stat-label">US fiscal-political</div><div class="stat-value">{{cov_us_fis}}</div><div class="stat-sub">Kept, elections and shutdowns.</div></div>
+  </div>
+  <div class="note blue"><b>What it means.</b> Every non-US G10 cell is below 10% in the training period (UK fiscal {{cov_uk_fis}}, Japan monetary {{cov_jp_mon}}). Country-relative signals (euro news against dollar news) are infeasible, so Strategy A becomes a dollar strategy driven by US policy news. Coverage is growing: in 2026 UK fiscal reaches {{cov_uk_fis_26}}, Japan monetary {{cov_jp_mon_26}} and euro-area fiscal {{cov_ea_fis_26}}; US tariffs fell to {{cov_us_tar_26}}.</div>
+  <details class="more">
+    <summary>Full coverage table (contracts, events, volume per cell)</summary>
+    <div class="body"><div class="table-scroll"><table class="data" id="tbl-coverage-full"></table></div></div>
+  </details>
+</section>
+
+<!-- ====================================================================== 4. signals -->
+<section class="sec" id="s4" style="--sc: var(--s1)">
+  <div class="kicker">4. Signals</div>
+  <h2>How the signals are built, step by step</h2>
+  <p class="claim">One chain runs for every contract and cell. Each step shows its formula with real numbers from one of three examples: a Russia-Ukraine deadline contract, the US monetary cell around the December 2024 Fed meeting, and the geopolitics cell during the June 2025 Israel-Iran war.</p>
+
+  <div class="scrolly" id="scrolly">
+    <div class="scrolly-fig">
+      <div class="fig">
+        <p class="fig-title" id="sc-title"></p>
+        <div class="plot" id="fig-scrolly"></div>
+        <p class="fig-caption">Scroll: the chart follows the steps on the right. Hover for values.</p>
+      </div>
+    </div>
+    <div class="scrolly-steps">
+      <div class="sc-step" data-step="0" style="--mc: var(--s1)"><h3>1. A contract</h3><p>"{{walk_title}}" on {{walk_platform}}: the price in cents is the market's probability of a ceasefire before the {{walk_deadline}} deadline.</p></div>
+      <div class="sc-step" data-step="1" style="--mc: var(--s1)"><h3>2. Remove the deadline</h3><p>A "by date" contract drifts to zero as the deadline nears, even when nothing happens. The hazard rate, the chance per year given no event yet, keeps the news and drops the calendar.</p></div>
+      <div class="sc-step" data-step="2" style="--mc: var(--s1)"><h3>3. Standardise and sign</h3><p>Each day's change in &lambda; is divided by the contract's usual move, signed so up means escalation (a ceasefire is {{walk_sign_word}}) and capped at &plusmn;{{winsor}}. On {{walk_peak_day}} the price jumped from {{walk_peak_px_before}} to {{walk_peak_px}} cents: z = {{walk_peak_z}}.</p></div>
+      <div class="sc-step" data-step="3" style="--mc: var(--s1)"><h3>4. Average into the cell</h3><p>The volume-weighted average z of eligible geopolitics contracts is the cell's daily change; its running sum is the global geopolitics index.</p></div>
+      <div class="sc-step" data-step="4" style="--mc: var(--s2)"><h3>5. Measure escalation</h3><p>Strategy B smooths the daily changes (EWMA, {{geo_halflife}}-day half-life) and z-scores the result on data available that day. At month-end, a z-score below {{esc_z1}} keeps full carry, {{esc_z1}} to {{esc_z2}} halves it, above {{esc_z2}} removes it.</p></div>
+      <div class="sc-step" data-step="5" style="--mc: var(--s2)"><h3>6. Scale the carry book</h3><p>A persistent daily move above {{shock_k}} standard deviations is a confirmed shock: exposure drops to {{shock_cut}}% (or the month-end weight if lower), then climbs back linearly to the month-end weight over {{rerisk_days}} days. Line: exposure applied to the carry book. Dots: confirmed shocks.</p></div>
+      <div class="sc-step" data-step="6" style="--mc: var(--s1)"><h3>7. The same chain for Strategy A</h3><p>The US monetary and fiscal cells take the same steps, then {{halflife}}-day smoothing and expanding scaling. The forecast y = &minus;Z<sub>MON</sub> &minus; (1 &minus; 2R) Z<sub>FIS</sub> sets the sign of the dollar position: hawkish news, long dollar.</p></div>
+    </div>
+  </div>
+
+  <h3>The chain in detail, with the numbers</h3>
+
+  <div class="walk">
+    <div class="card walk-step" style="--mc: var(--s1)">
+      <h3><span class="num">1</span> One contract, one day: from the price to a standardised change</h3>
+      <p>"{{walk_title}}" (deadline {{walk_deadline}}, direction {{walk_sign}}: a ceasefire is {{walk_sign_word}}): twelve eligible days around its largest move, {{walk_win_start}} to {{walk_win_end}}.</p>
+      <div class="formula-block">
+        <div>&lambda;<sub>t</sub> = &minus;ln(1 &minus; p<sub>t</sub>) / &tau;<sub>t</sub> <span class="fnote">hazard rate per year; &tau; = time to the deadline in years, floored at {{min_days}} days; p clipped to [0.001, 0.999]</span></div>
+        <div>&Delta;<sub>t</sub> = (&lambda;<sub>t</sub> &minus; &lambda;<sub>prev</sub>) / &radic;gap <span class="fnote">gap = days since the previous fresh price, at most 7</span></div>
+        <div>&sigma;<sub>t</sub> = &radic;( EWMA<sub>span {{vol_span}}</sub> of the past &Delta;&sup2; ) <span class="fnote">strictly before t; a cross-contract fallback until {{min_obs_vol}} past changes exist</span></div>
+        <div>z<sub>t</sub> = sign &times; &Delta;<sub>t</sub> / &sigma;<sub>t</sub>, clipped to &plusmn;{{winsor}}</div>
+      </div>
+      <p>On {{walk_peak_day}} the price went from {{walk_peak_px_before}} to {{walk_peak_px}} cents and the hazard rate from {{walk_peak_hz_before}} to {{walk_peak_hz}} a year: a change of {{walk_peak_dv}} against a usual move of {{walk_peak_sd}}, so z = {{walk_peak_z}} once signed and capped.</p>
+    </div>
+    <div class="card walk-step" style="--mc: var(--s1)">
+      <h3><span class="num">2</span> From contracts to a cell: volume-weighted average, then cumulative sum</h3>
+      <div class="formula-block">
+        <div>d<sub>cell,t</sub> = &Sigma;<sub>i</sub> w<sub>i,t</sub> z<sub>i,t</sub> / &Sigma;<sub>i</sub> w<sub>i,t</sub> <span class="fnote">w = trailing 7-day traded volume of contract i, over the eligible and fresh contracts of the cell</span></div>
+        <div>index<sub>t</sub> = &Sigma;<sub>s &le; t</sub> d<sub>cell,s</sub></div>
+      </div>
+      <p>That day the contract carried {{walk_peak_share}} of the cell's volume, so it contributed {{walk_peak_contrib}} of the cell's change of {{walk_peak_cell}} ({{walk_peak_n}} contracts).</p>
+      <details class="more"><summary>Day-by-day table: the contract and its cell</summary><div class="body"><div class="table-scroll"><table class="data" id="tbl-walk-contract"></table></div></div></details>
+    </div>
+    <div class="card walk-step" style="--mc: var(--s1)">
+      <h3><span class="num">3</span> From the cell to Strategy A's position</h3>
+      <div class="formula-block">
+        <div>s<sub>t</sub> = EWMA<sub>half-life {{halflife}} days</sub>(d<sub>cell</sub>) <span class="fnote">zero on days without contracts</span></div>
+        <div>Z<sub>t</sub> = s<sub>t</sub> / sd(s<sub>&lt; t</sub>) <span class="fnote">expanding standard deviation, after {{min_active}} active days</span></div>
+        <div>y<sub>t</sub> = &minus;Z<sub>MON,t</sub> &minus; (1 &minus; 2R<sub>t</sub>) Z<sub>FIS,t</sub> <span class="fnote">expected excess return of the foreign currencies; R = 1 under US fiscal dominance, else 0</span></div>
+        <div>w<sub>i,t</sub> = sign(y<sub>t</sub>) &times; &kappa;<sub>t</sub> / &sigma;&sup2;<sub>i,t</sub> <span class="fnote">inverse-variance basket of the {{n_pairs}} pairs; &kappa; set by the {{vol_target}}% volatility target, then the {{gross_cap}}x gross and {{pair_cap}}% per-pair caps</span></div>
+      </div>
+      <p>The forecast is common to all nine pairs, so only the sign of y matters: A1 is long or short the dollar against a fixed basket. Around the hawkish December 2024 Fed cut ({{walk_a_start}} to {{walk_a_end}}), Z<sub>MON</sub> climbs to {{walk_a_zmon_max}}, y turns negative on {{walk_a_flip_day}}, and the dollar position goes from {{walk_a_usd_min}} to {{walk_a_usd_max}} times capital (negative = short USD).</p>
+      <details class="more"><summary>Day-by-day table: signals and the dollar position</summary><div class="body"><div class="table-scroll"><table class="data" id="tbl-walk-a"></table></div></div></details>
+    </div>
+    <div class="card walk-step" style="--mc: var(--s2)">
+      <h3><span class="num">4</span> From the geopolitics cell to Strategy B's exposure</h3>
+      <div class="formula-block">
+        <div>escalation<sub>t</sub> = EWMA<sub>half-life {{geo_halflife}} days</sub>(d<sub>geo</sub>); z<sub>t</sub> = (escalation<sub>t</sub> &minus; mean<sub>&le; t</sub>) / sd<sub>&le; t</sub></div>
+        <div>month-end weight = 1 if z &lt; {{esc_z1}}; {{esc_w1}} if {{esc_z1}} &le; z &lt; {{esc_z2}}; 0 if z &ge; {{esc_z2}} <span class="fnote">set on the last day of the month, held for the next month</span></div>
+        <div>shock: d<sub>geo,t</sub> &gt; {{shock_k}} &sigma;<sub>t</sub> and persisting <span class="fnote">the move was already more than half its size {{shock_persist_hours}} hours before the snapshot, with enough volume</span></div>
+        <div>exposure: on a confirmed shock, w<sub>t</sub> = min(month-end weight, {{shock_cut}}%); then w climbs linearly back to the month-end weight over {{rerisk_days}} trading days, unless a new shock resets it <span class="fnote">the carry book is scaled by w</span></div>
+      </div>
+      <p>Around the Israel-Iran war ({{walk_g_start}} to {{walk_g_end}}): {{walk_g_shocks}} confirmed shocks, the first on {{walk_g_first_shock}}, each cutting exposure to a quarter. The escalation z-score peaks at {{walk_g_zmax}} and is {{walk_g_month_z}} on {{walk_g_month_end}}, the month's last trading day, so July's weight is {{walk_g_month_w}}. Rows without an exposure are days the carry book does not trade.</p>
+      <details class="more"><summary>Day-by-day table: escalation, shocks and exposure</summary><div class="body"><div class="table-scroll"><table class="data" id="tbl-walk-geo"></table></div></div></details>
+    </div>
+  </div>
+
+  <h3>The resulting theme indices</h3>
+  <p>Each index is the running sum of a cell's signed, standardised daily contract changes. Up means hawkish, escalation or fiscal expansion. Pick a cell; the bars below show how many contracts back it each day.</p>
+  <div class="fig">
+    <div class="controls">
+      <label>Cell <select id="sig-cell"></select></label>
+      <span class="seg" id="sig-weight"><button aria-pressed="true" data-v="index_vw">volume-weighted</button><button aria-pressed="false" data-v="index_ew">equal-weighted</button></span>
+      <label class="switch"><input type="checkbox" id="sig-ann" checked> event markers</label>
+    </div>
+    <div class="plot tall" id="fig-signals"></div>
+    <p class="fig-caption">Index level in standard deviations of contract changes; shaded area = out-of-sample. Drag the handles on the strip below the chart to zoom. Event markers (hover for the event) are illustrations only, never used by a trading rule.</p>
+  </div>
+  <details class="more">
+    <summary>The other contract types: probabilities and bracket markets</summary>
+    <div class="body">
+      <ul>
+        <li>Contracts without a deadline (for example "Will the Fed hike at the March meeting?") enter as their probability, with the same standardisation.</li>
+        <li>Bracket markets (Fed decision in basis points, inflation prints, number of cuts) become one expected value per meeting or print: the price-weighted average of bucket values, renormalised over the priced buckets. It then goes through the same change, volatility and cap steps.</li>
+        <li>Every contract must pass the section 2 eligibility rules each day. Robustness checks replace volume weights with equal weights.</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+<!-- ====================================================================== 5. timing -->
+<section class="sec" id="s5" style="--sc: var(--s1)">
+  <div class="kicker">5. Is the information early?</div>
+  <h2>The dollar reacts to Fed news as fast as the odds</h2>
+  <p class="claim">In a pooled panel of the {{n_pairs}} G10 pairs, US monetary news moves the dollar the same day (t = {{t_mon_0}}) and predicts nothing afterwards (t = {{t_mon_1}} at one day): the efficient-markets outcome for liquid G10 FX.</p>
+  <div class="two-col">
+    <div class="fig">
+      <p class="fig-title">Driscoll-Kraay t-statistics by horizon</p>
+      <p class="fig-sub">Pooled panel of G10 pairs against USD, pair fixed effects. Theory predicts a positive sign. Hover a cell for the coefficient.</p>
+      <div class="table-scroll"><table class="data heat" id="tbl-horizon"></table></div>
+      <p class="fig-caption">The only predictive cell above 3 is fiscal news at 20 days (the same-day monetary cell is contemporaneous). A rule built on it, with its horizon picked after seeing this table, is in the <a href="#not-a-result">"Not a result" panel</a> of section 6.</p>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Weekend gap test <span class="badge badge-pre">pre-registered</span></h3>
+        <p>FX closes Friday at 17:00 New York; prediction markets keep trading. Informative weekend moves would predict the Monday opening gap. On {{wk_n}} pair-weekends since 2024, the pre-registered specification's largest |t| is {{wk_max_t}}: a null result. The one higher t in the other specifications (below) comes from an almost-always-zero regressor and is uninterpretable.</p>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>Hourly lead-lag <span class="badge badge-exp">exploratory</span></h3>
+        <p>Around the top 1% of hourly moves, FX moves first or simultaneously; monetary odds follow in the same and next hour. Nothing systematic precedes a prediction-market move.</p>
+      </div>
+    </div>
+  </div>
+  <details class="more">
+    <summary>Hourly event studies around the largest moves (exploratory)</summary>
+    <div class="body">
+  <div class="fig">
+    <p class="fig-title">Hourly event studies around the largest moves</p>
+    <div class="controls"><label>Study <select id="ll-study"></select></label></div>
+    <div class="plot short" id="fig-leadlag"></div>
+    <p class="fig-caption">Mean response with its 95% confidence band, aligned on the event's sign; hour 0 is the event hour. A significant mean at negative hours would mean the other market leads.</p>
+  </div>
+    </div>
+  </details>
+  <details class="more">
+    <summary>Weekend gap regressions, every specification</summary>
+    <div class="body">
+      <p>Main specification: US monetary, US fiscal and global geopolitics on JPY and CHF; gap from Friday 17:00 New York to Monday 07:00 London ("ny" rows: reopen Sunday 18:00 New York). All weekends since 2024.</p>
+      <div class="table-scroll"><table class="data" id="tbl-weekend"></table></div>
+    </div>
+  </details>
+</section>
+
+<!-- ====================================================================== 6. strategy A -->
+<section class="sec" id="s6" style="--sc: var(--s1)">
+  <div class="kicker">6. Strategy A, developed markets</div>
+  <h2>Do US policy odds predict the dollar against the G10?</h2>
+  <p class="claim">Real content before costs (gross Sharpe {{a1_gross}}), halved by costs (net {{a1_net}}<sup>*</sup>, t = {{a1_t}}), not significant with under three years of data. The information is about the dollar: the country-relative part alone loses money.</p>
+  <p class="star-note">* Conservative cost assumption: half the Bloomberg composite forward bid-ask, probably wider than dealable G10 spreads. At half these costs the net Sharpe is {{a1c_net}} (a posteriori scenario).</p>
+
+  <details class="more">
+    <summary>The rule in detail: universe, signal, execution, sizing, costs, and the two channels</summary>
+    <div class="body">
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Trading rule, A1 <span class="badge badge-pre">pre-registered</span></h3>
+      <dl class="kv">
+        <dt>Universe</dt><dd>{{n_pairs}} G10 currencies against USD, inverse-variance basket</dd>
+        <dt>Signal</dt><dd>Daily change in the US monetary and fiscal indices, {{halflife}}-day half-life, scaled by its expanding volatility</dd>
+        <dt>Execution</dt><dd>Signal at {{snapshot_time}} London, traded at the New York close</dd>
+        <dt>Sizing</dt><dd>Position proportional to monetary + fiscal signal; {{vol_target}}% volatility target; caps {{gross_cap}}x gross and {{pair_cap}}% per pair</dd>
+        <dt>Costs</dt><dd>Half the one-month forward bid-ask spread, {{half_spread_days}}-day median</dd>
+      </dl>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Monetary channel</h3>
+        <p>FOMC decision markets. Hawkish shift &rarr; long USD, in every regime.</p>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>Fiscal channel</h3>
+        <p>Elections and shutdowns. Expansion &rarr; long USD under monetary dominance, short USD under fiscal dominance (60-day yield-FX correlation below zero). Fiscal dominance held on only {{regime_days_25}} days of 2025 ({{regime_share_25}}) and none in 2024 or 2026, so in practice the fiscal sign is +1.</p>
+      </div>
+    </div>
+  </div>
+  <p>Signs come from theory; nothing is estimated. Three variants were declared before any backtest: A1 (primary), A2 (every G10 cell at the USD 10k threshold) and the "+ geopolitics" versions (adding B's index contracts). The weekly, 0.5x-cost and 20-day lines were added after the results and are labelled.</p>
+    </div>
+  </details>
+
+  <div class="fig">
+    <p class="fig-title">Cumulative return, 2024-2026</p>
+    <details class="more glossary"><summary>What each line is</summary><div class="body"><div class="table-scroll"><table class="data" id="tbl-a-glossary"></table></div></div></details>
+    <div class="controls">
+      <span class="chips" id="a-chips"></span>
+    </div>
+    <div class="controls">
+      <span class="seg" id="gross-net"><button aria-pressed="true" data-v="net">net of costs</button><button aria-pressed="false" data-v="gross">gross</button></span>
+      <label class="switch"><input type="checkbox" id="a-ann" checked> event markers</label>
+    </div>
+    <div class="plot tall" id="fig-a-cum"></div>
+    <div class="plot mini" id="fig-a-dd"></div>
+    <p class="fig-caption">Compounded returns in percent; the lower panel shows their drawdowns and follows the zoom strip below the chart. Shaded area = 2026, out of sample. The gross / net switch also drives the stat cards and the Strategy B chart.</p>
+  </div>
+
+  <div class="controls">
+    <label>Variant <select id="a-stat-variant"></select></label>
+    <span class="seg" id="a-period"><button aria-pressed="true" data-v="full">2024-2026</button><button aria-pressed="false" data-v="in-sample">2024-2025</button><button aria-pressed="false" data-v="out-of-sample">2026</button></span>
+    <span id="a-stat-badge"></span>
+  </div>
+  <div class="grid grid-cards" id="cards-a"></div>
+
+  <div class="fig">
+    <p class="fig-title">Net and gross Sharpe ratios of the declared variants, 2024-2026</p>
+    <p class="fig-sub">Whiskers: 90% block-bootstrap confidence intervals ({{boot_block}}-day blocks, {{boot_draws}} draws).</p>
+    <div class="plot short" id="fig-a-ladder"></div>
+    <p class="fig-caption">Read top to bottom: costs halve the edge (A1); country cells help only through the dollar (A2); the cross-country part alone loses (A2 dollar-neutral, {{a2dn_net}}); adding geopolitics to A1 makes it worse ({{a1s_net}}). Prediction markets inform the dollar, not G10 differences.</p>
+  </div>
+
+  <div class="grid grid-3">
+    <div class="card">
+      <h3>Costs</h3>
+      <p>A1 turns over {{a1_turnover}} times its capital a year, paying {{a1_cost}} a year in spreads: about {{a1_bp_earned}} bp earned and {{a1_bp_paid}} bp paid per unit traded. Bloomberg composite spreads likely overstate dealable G10 spreads, so costs are conservative.</p>
+    </div>
+    <div class="card">
+      <h3>Significance</h3>
+      <p>A1 net: t = {{a1_t}}, 90% interval {{a1_ci_lo}} to {{a1_ci_hi}}. Only A2 gross has an interval that excludes zero ({{a2g_ci_lo}} to {{a2g_ci_hi}}). With under three years, a Sharpe below about 1.2 is not significant.</p>
+    </div>
+    <div class="card">
+      <h3>Out of sample, 2026</h3>
+      <p>A1 net {{a1_oos_net}} (gross {{a1_oos_gross}}), A2 net {{a2_oos_net}}. The monetary leg drives A1: it was long USD into the September 2026 hike.</p>
+    </div>
+  </div>
+
+  <details class="more">
+    <summary>Robustness: beats {{placebo_a1}}% of date-shuffled draws, stays {{loo_a1_min}} to {{loo_a1_max}} without any single event, timing carries the P&amp;L</summary>
+    <div class="body">
+  <h3>Robustness: the signal's timing is real, our best Sharpe is not</h3>
+  <div class="two-col">
+    <div class="fig">
+      <p class="fig-title">Date-shuffle placebo</p>
+      <p class="fig-sub">Signal dates are shuffled 100 times and the rule rerun. The actual Sharpe beats {{placebo_a1}}% of draws for A1 and {{placebo_a2}}% for A2.</p>
+      <div class="controls"><span class="seg" id="a-placebo-variant"><button aria-pressed="true" data-v="A1">A1</button><button aria-pressed="false" data-v="A2">A2</button><button aria-pressed="false" data-v="A1+S">A1 + geopolitics</button></span></div>
+      <div class="plot short" id="fig-a-placebo"></div>
+    </div>
+    <div class="fig">
+      <p class="fig-title">Smoothing half-life <span class="badge badge-pre">grid declared ex ante</span></p>
+      <p class="fig-sub">The primary rule uses {{halflife}} days; pick another half-life to see A1's net Sharpe.</p>
+      <div class="halflife-strip" id="a-halflife"></div>
+      <div class="grid grid-2" id="a-halflife-cards" style="margin-top:12px"></div>
+      <p class="fig-caption">A short half-life trades noise; a long one trades late.</p>
+    </div>
+  </div>
+  <details class="more">
+    <summary>Leave one event out: A1's net Sharpe stays between {{loo_a1_min}} and {{loo_a1_max}}</summary>
+    <div class="body">
+      <p>The ten most important events (2024 election markets, individual FOMC meetings), each removed in turn.</p>
+      <div class="plot short" id="fig-a-loo"></div>
+    </div>
+  </details>
+  <div class="table-scroll"><table class="data" id="tbl-a-robust"></table></div>
+  <details class="more">
+    <summary>Dollar momentum benchmark and the spec's gated rule</summary>
+    <div class="body">
+      <p><b>Momentum</b> (diagnostic note of 7 October, <code>results/notes/strategy_a_explained.md</code>; not in RESULTS.md). Dollar-basket time-series momentum, run through A1's construction, loses money over the sample: gross Sharpe {{mom1}} at one day, {{mom5}} at five. A1's beta on 5-day momentum is {{mom5_beta}} (t = {{mom5_t}}), with an alpha of about {{mom5_alpha}} a year (t = {{mom5_alpha_t}}): momentum does not explain A1, which is not significant at 5% with or without the control.</p>
+      <div class="table-scroll"><table class="data" id="tbl-momentum"></table></div>
+      <p><b>Spec gated rule.</b> The original spec's rule (trade only themes with |t| &gt; {{gate_abs_t}} in training) selects nothing: the largest t is {{gate_largest_t}}, so there is no strong daily predictive relationship.</p>
+      <div class="table-scroll"><table class="data" id="tbl-gate"></table></div>
+      <p><b>Static vs timing (D25).</b> Holding A1's average 2024-2025 position earns a gross Sharpe of {{static_a1}}; timing earns {{timing_a1}}, so A1 is not a disguised static dollar bet.</p>
+    </div>
+  </details>
+
+    </div>
+  </details>
+  <div class="warn-panel" id="not-a-result">
+    <h3>Not a result: the 20-day rule <span class="badge badge-exp">exploratory</span></h3>
+    <p>A rule built on section 5's 20-day fiscal coefficient (estimated on 2024-2025, rebalanced every 20 trading days) shows a 2026 net Sharpe of <b>{{d30_oos}}</b> ({{d30_full}} full sample). We set it aside: its horizon was chosen after seeing the full-sample diagnostic, and it rebalances on a fixed calendar. Across all {{d30_n}} possible start dates, the average 2026 Sharpe is <b>{{d30_mean}}</b>, only {{d30_npos}} are positive, and our published start ranks {{d30_rank}} of {{d30_n}}. A regression on non-overlapping 20-day returns gives t = {{d30_eff_t}} on {{d30_eff_n}} observations.</p>
+    <div class="controls"><span class="seg" id="d30-period"><button aria-pressed="true" data-v="sharpe_2026">2026</button><button aria-pressed="false" data-v="sharpe_2024-2025">2024-2025</button><button aria-pressed="false" data-v="sharpe_2024-2026">2024-2026</button></span></div>
+    <div class="plot short" id="fig-d30"></div>
+    <p class="fig-caption">Net Sharpe of the frozen rule for each of the 20 rebalancing phases; published phase (offset 0) highlighted, line = mean. Lesson: test every rebalancing phase.</p>
+    <details class="more">
+      <summary>Monthly P&amp;L in 2026 and the static / timing split of this rule</summary>
+      <div class="body"><div class="table-scroll"><table class="data" id="tbl-d30-monthly"></table></div><div class="table-scroll"><table class="data" id="tbl-d30-decomp"></table></div></div>
+    </details>
+  </div>
+</section>
+
+<!-- ====================================================================== 7. strategy B -->
+<section class="sec" id="s7" style="--sc: var(--s2)">
+  <div class="kicker">7. Strategy B, emerging markets</div>
+  <h2>EM carry timed by a geopolitical index</h2>
+  <p class="claim">The carry works: net Sharpe {{bc_net}} (interval {{bc_ci_lo}} to {{bc_ci_hi}}), {{bc_oos}} out of sample in 2026. The prediction-market overlay looks better at first ({{pm_net}}, drawdown {{pm_dd}} vs {{bc_dd}}), but its whole edge is one contract in one month.</p>
+
+  <details class="more">
+    <summary>Mechanism 1 of 2: carry rule, universe and long history</summary>
+    <div class="body">
+  <h3>Mechanism 1 of 2: the carry <span class="badge badge-pre">pre-registered</span></h3>
+  <div class="two-col">
+    <div>
+      <ol>
+        <li><b>Sort on carry, monthly.</b> Rank the six currencies by one-month forward or NDF premium (the interest gap).</li>
+        <li><b>Long the top, short the bottom.</b> Top tercile against bottom (2 against 2), inverse-volatility weights, {{vol_target}}% volatility target.</li>
+        <li><b>Collect the premium.</b> UIP fails: high-yielders fall by less than the rate gap.</li>
+      </ol>
+      <p><b>Universe.</b> Floating currencies only (IRR codes 12 and 13). KRW closes before the {{snapshot_time}} London signal, so it trades with a one-day lag.</p>
+      <div class="currency-chips" id="universe-chips"></div>
+    </div>
+    <div class="card">
+      <h3>The catch: {{lh_years}} years of history</h3>
+      <div class="grid grid-3" style="margin:8px 0">
+        <div class="stat"><div class="stat-label">Sharpe ratio</div><div class="stat-value">{{lh_sharpe}}</div></div>
+        <div class="stat"><div class="stat-label">Max drawdown</div><div class="stat-value">{{lh_dd}}</div></div>
+        <div class="stat"><div class="stat-label">Excess kurtosis</div><div class="stat-value">{{lh_kurt}}</div></div>
+      </div>
+      <p>Since {{lh_start}} the same carry earns little and loses in bursts during global risk-off. Geopolitical shocks are one trigger, and prediction markets price them directly: hence the overlay.</p>
+      <div class="plot mini" id="fig-lh"></div>
+    </div>
+  </div>
+
+    </div>
+  </details>
+  <h3>Mechanism 2 of 2: the overlay <span class="badge badge-pre">pre-registered</span></h3>
+  <p>Each day, about a dozen liquid conflict contracts (Iran, Ukraine, Taiwan) form one global geopolitics index, scaled and signed so up means escalation. Two rules act on it. <b>Escalation, monthly:</b> an expanding z-score of an EWMA of daily changes ({{geo_halflife}}-day half-life); high values scale exposure down. <b>Shock, daily:</b> a persistent move above {{shock_k}} standard deviations cuts exposure to {{shock_cut}}%, restored over {{rerisk_days}} days. Cut fast, re-risk slowly.</p>
+  <div class="fig">
+    <p class="fig-title">The global geopolitics index and its confirmed shocks</p>
+    <p class="fig-sub">Markers are the {{n_shocks}} confirmed shocks; bars below count the index's contracts each day. Hover a marker for its contracts.</p>
+    <div class="plot tall" id="fig-geo"></div>
+    <p class="fig-caption">Late-2024 shocks rest on {{shock_contracts_late24}} contracts. The real ones (June 2025 Israel-Iran war, 2026 Iran war) stand out on the right, with up to {{shock_contracts_max}} contracts.</p>
+  </div>
+  <div class="fig">
+    <p class="fig-title">Exposure w(t) set by the overlay</p>
+    <div class="controls">
+      <button class="chip" id="expo-play" type="button">Replay the overlay day by day</button>
+      <span class="readout" id="expo-readout"></span>
+      <label class="switch"><input type="checkbox" id="expo-vix"> show the VIX-driven version</label>
+    </div>
+    <div class="plot short" id="fig-expo"></div>
+    <p class="fig-caption">Average exposure {{expo_mean}}, reduced on {{expo_reduced}} of {{expo_n}} days. The lighter line is the monthly escalation component; the first dip, June 2024, comes from one Taiwan contract.</p>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Cumulative return, 2024-2026</p>
+    <details class="more glossary"><summary>What each line is</summary><div class="body"><div class="table-scroll"><table class="data" id="tbl-b-glossary"></table></div></div></details>
+    <div class="controls"><span class="chips" id="b-chips"></span></div>
+    <div class="controls">
+      <span class="seg" id="gross-net-b"><button aria-pressed="true" data-v="net">net of costs</button><button aria-pressed="false" data-v="gross">gross</button></span>
+      <label class="switch"><input type="checkbox" id="b-ann" checked> event markers</label>
+    </div>
+    <div class="plot tall" id="fig-b-cum"></div>
+    <div class="plot mini" id="fig-b-dd"></div>
+    <p class="fig-caption">Compounded returns in percent, {{km_month}} shaded; lower panel: drawdown. Dashed line: the overlay without the Taiwan contract (no gross version).</p>
+  </div>
+
+  <div class="controls">
+    <label>Line <select id="b-stat-line"></select></label>
+    <span class="seg" id="b-period"><button aria-pressed="true" data-v="full">2024-2026</button><button aria-pressed="false" data-v="in-sample">2024-2025</button><button aria-pressed="false" data-v="out-of-sample">2026</button></span>
+    <label class="switch"><input type="checkbox" id="b-taiwan"> remove the Taiwan contract (D29)</label>
+    <span id="b-stat-badge"></span>
+  </div>
+  <div class="grid grid-cards" id="cards-b"></div>
+
+  <div class="two-col">
+    <div class="fig">
+      <p class="fig-title">The overlay's edge is one month</p>
+      <p class="fig-sub">PM-timed minus base carry, sum of net returns, in percentage points.</p>
+      <div class="plot short" id="fig-b-keymonth"></div>
+      <p class="fig-caption">{{km_month}} alone adds {{km_gain}} points; all other months together lose {{km_others}}. Without the contract behind the June cut, "{{km_event}}", the overlay's Sharpe falls to {{we_net}}, below the plain carry, and its drawdown returns to {{we_dd}}.</p>
+    </div>
+    <div class="fig">
+      <p class="fig-title">Net Sharpe ratios, 2024-2026</p>
+      <p class="fig-sub">Whiskers: 90% block-bootstrap intervals.</p>
+      <div class="plot short" id="fig-b-ladder"></div>
+      <p class="fig-caption">Carry costs: {{bc_cost}} a year (monthly trading). The VIX overlay is the ex ante benchmark; B2 and the 3-events filter are post hoc.</p>
+    </div>
+  </div>
+
+  <h3 id="s7-why">Why the overlay fails: this carry book was long oil, and its drawdowns were not geopolitical</h3>
+  <div class="fig">
+    <p class="fig-title">Average position and weekly beta to Brent, by currency</p>
+    <div class="plot short" id="fig-b-comp"></div>
+    <p class="fig-caption">Long COP ({{comp_cop}}%), BRL ({{comp_brl}}%) and MXN ({{comp_mxn}}%); short CLP ({{comp_clp}}%) and KRW ({{comp_krw}}%). Both shorts fall when oil rises, so the book gains with oil: Brent beta {{beta_bc_brent}} (t = {{beta_bc_brent_t}}), equity beta {{beta_bc_msci}}.</p>
+  </div>
+  <div class="grid grid-3">
+    <div class="card"><h3>Long oil</h3><p>Oil exposure comes from the KRW and CLP shorts and the COP long; BRL and MXN have near-zero Brent betas over the window.</p></div>
+    <div class="card"><h3>Escalation helped</h3><p>In the February-April 2026 Iran war the base carry gained {{ep_iran_bc}}, the PM-timed version {{ep_iran_pm}}. Cutting on escalation cut a winner.</p></div>
+    <div class="card"><h3>No crash to insure</h3><p>The August 2024 yen unwind cost {{ep_yen_bc}}, Liberation Day {{ep_lib_bc}}. The carry's {{bc_dd}} drawdown was a slow grind, not a shock; the {{lh_dd}} crash predates our window.</p></div>
+  </div>
+  <details class="more">
+    <summary>Universe screen (IRR classification) and the other declared variants</summary>
+    <div class="body">
+      <div class="table-scroll"><table class="data" id="tbl-universe"></table></div>
+      <p>Other declared variants (universe codes 9 to 13, the previous universe, a 20% cap per currency) and the misspecified index-level version are in the replication package's RESULTS.md.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ====================================================================== 8. risk -->
+<section class="sec" id="s8" style="--sc: var(--s1)">
+  <div class="kicker">8. Risk analysis</div>
+  <h2>When the strategies lose money</h2>
+  <p class="claim">Strategy A's worst drawdown ({{a1_wdd}}, still open) overlaps the Iran war, when the carry gained. A and B are distinct books (daily correlation {{corr_ab}}).</p>
+  <div class="fig">
+    <p class="fig-title">Four stress episodes, cumulative return over the window</p>
+    <div class="table-scroll"><table class="data heat" id="tbl-episodes"></table></div>
+    <p class="fig-caption">Strategy A gained in three of the four episodes and lost {{ep_iran_a1}} in the Iran war; the long-oil carry did the reverse. Hover a cell for the window's worst day; click an episode to shade it on the cumulative charts of sections 6 and 7.</p>
+  </div>
+  <div class="grid grid-4">
+    <div class="stat"><div class="stat-label">A1, worst drawdown</div><div class="stat-value">{{a1_wdd}}</div><div class="stat-sub">{{a1_wdd_peak}} to {{a1_wdd_trough}}, still open</div></div>
+    <div class="stat"><div class="stat-label">Base carry, worst drawdown</div><div class="stat-value">{{bc_wdd}}</div><div class="stat-sub">{{bc_wdd_peak}} to {{bc_wdd_trough}}</div></div>
+    <div class="stat"><div class="stat-label">KRW in the carry</div><div class="stat-value">{{krw_share}}</div><div class="stat-sub">of average exposure, always short</div></div>
+    <div class="stat"><div class="stat-label">A vs B correlation</div><div class="stat-value">{{corr_ab}}</div><div class="stat-sub">daily returns; weekly {{corr_ab_weekly}}</div></div>
+  </div>
+  <details class="more">
+    <summary>Factor exposure, downside beta and performance by state</summary>
+    <div class="body">
+  <div class="two-col">
+    <div class="fig">
+      <p class="fig-title">Weekly factor betas</p>
+      <div class="controls"><label>Strategy <select id="beta-strategy"></select></label></div>
+      <div class="plot short" id="fig-betas"></div>
+      <p class="fig-caption">Newey-West t-statistics on hover; bars with |t| above 2 are labelled. A1 is neutral; A2 is hedge-like (MSCI World beta {{beta_a2_msci}}, t = {{beta_a2_msci_t}}); B is a commodity carry (Brent t = {{beta_bc_brent_t}}).</p>
+    </div>
+    <div class="fig">
+      <p class="fig-title">Normal and downside beta</p>
+      <div class="controls"><label>Market <select id="down-market"><option value="msci_world">MSCI World</option><option value="em_carry">EM carry factor</option></select></label></div>
+      <div class="plot short" id="fig-downside"></div>
+      <p class="fig-caption">Downside beta (Lettau, Maggiori and Weber) uses the market's {{down_weeks}} worst weeks: about zero for A1 ({{dbeta_a1}}) and the carry ({{dbeta_bc}}), {{dbeta_a2}} for A2. In those weeks the carry averages {{down_bc_bp}} bp.</p>
+    </div>
+  </div>
+  <div class="fig">
+    <p class="fig-title">Performance by state</p>
+    <div class="controls"><label>Conditioner <select id="cond-select"></select></label></div>
+    <div class="table-scroll"><table class="data heat" id="tbl-conditional"></table></div>
+    <p class="fig-caption">Annualised Sharpe by state. Liquidity rows use terciles of each strategy's average forward half-spread, known the day before: the carry earns {{liq_low}} in the most liquid tercile, {{liq_high}} in the least.</p>
+  </div>
+    </div>
+  </details>
+  <details class="more">
+    <summary>Worst drawdowns, concentration and leverage</summary>
+    <div class="body">
+      <div class="controls"><label>Strategy <select id="dd-strategy"></select></label></div>
+      <div class="table-scroll"><table class="data" id="tbl-worst-dd"></table></div>
+      <h4>Concentration of absolute P&amp;L (Herfindahl index)</h4>
+      <div class="table-scroll"><table class="data" id="tbl-concentration"></table></div>
+      <h4>Leverage and caps</h4>
+      <p>A1 targets {{vol_target}}% volatility (realised {{lev_a1_vol}}) with a mean gross exposure of {{lev_a1_gross}}x capital; the {{pair_cap}}% per-pair cap binds on {{lev_a1_pair_cap}} of days, the {{gross_cap}}x gross cap on {{lev_a1_gross_cap}}. The carry has no cap and averages {{lev_bc_gross}}x capital.</p>
+      <div class="table-scroll"><table class="data" id="tbl-leverage"></table></div>
+    </div>
+  </details>
+</section>
+
+<!-- ====================================================================== 9. robustness -->
+<section class="sec" id="s9" style="--sc: var(--s1)">
+  <div class="kicker">9. Robustness</div>
+  <h2>Placebos, parameter grids, costs</h2>
+  <p class="claim">Date shuffles: A1 beats {{placebo_a1}}% of draws, A2 {{placebo_a2}}%, the PM-timed carry {{placebo_b}}%. Random contracts give the overlay {{placebo_b_random}}, so its Sharpe is mostly the carry.</p>
+  <div class="two-col">
+    <div class="fig">
+      <p class="fig-title">Date-shuffle placebos</p>
+      <div class="controls"><label>Rule <select id="placebo-select"></select></label></div>
+      <div class="plot short" id="fig-placebo"></div>
+      <p class="fig-caption">Sharpe distribution over 100 draws, actual rule marked. For a posteriori rules the shuffle keeps part of the signal's monthly level, so the test is weaker.</p>
+    </div>
+    <div class="fig">
+      <p class="fig-title">Strategy B parameter grid</p>
+      <p class="fig-sub">Net Sharpe by shock threshold and re-risk horizon; pick the cut level. Chosen cell ({{grid_k}} sd, {{grid_rerisk}} days, cut to {{grid_cut}}%) outlined.</p>
+      <div class="controls"><span class="seg" id="grid-cut"></span></div>
+      <div class="table-scroll"><table class="data heat" id="tbl-grid"></table></div>
+      <p class="fig-caption" id="grid-pick">{{n_grid}} combinations declared before the backtest. Click a cell for its drawdown and annual return.</p>
+    </div>
+  </div>
+  <details class="more">
+    <summary>Cost sensitivity and Sharpe by calendar year</summary>
+    <div class="body">
+  <div class="two-col">
+    <div class="fig">
+      <p class="fig-title">Sharpe by calendar year</p>
+      <div class="table-scroll"><table class="data" id="tbl-subperiods"></table></div>
+      <p class="fig-caption">Net Sharpe per year. 2026 runs to {{sample_end}}.</p>
+    </div>
+    <div class="fig">
+      <p class="fig-title">Cost sensitivity</p>
+      <div class="plot short" id="fig-cost"></div>
+      <p class="fig-caption">PM-timed B keeps a Sharpe of {{cost_b_3}} at 3x costs; at half costs A1 rises from {{a1_net}} to {{a1c_net}} and A2 from {{a2_net}} to {{a2c_net}} (a posteriori scenario).</p>
+    </div>
+  </div>
+    </div>
+  </details>
+  <details class="more">
+    <summary>Other checks: equal weights, volume thresholds, reversed signs, leave-one-event-out for B</summary>
+    <div class="body"><div class="table-scroll"><table class="data" id="tbl-robust-other"></table></div></div>
+  </details>
+</section>
+
+<!-- ====================================================================== 10. protocol -->
+<section class="sec" id="s10" style="--sc: var(--s1)">
+  <div class="kicker">10. Inference, limitations, replication</div>
+  <h2>How much these numbers can be trusted</h2>
+  <div class="proto">
+    <div class="card"><h3>Pre-registration</h3><p>Every primary rule logged before its backtest; post hoc additions labelled.</p></div>
+    <div class="card"><h3>Out-of-sample</h3><p>Anything estimated uses 2024-2025 only; {{oos_start}} to {{sample_end}} is reported separately.</p></div>
+    <div class="card"><h3>Uncertainty</h3><p>Block-bootstrap {{boot_level}}% intervals ({{boot_block}}-day blocks, {{boot_draws}} draws). With under three years, a Sharpe below about 1.2 is not significant.</p></div>
+    <div class="card"><h3>Placebos</h3><p>Date shuffles, random contracts and reversed signs for every rule, including the a posteriori ones.</p></div>
+    <div class="card"><h3>Costs</h3><p>Half the forward bid-ask, tested from 0.5x to 3x.</p></div>
+    <div class="card"><h3>Report</h3><p>Every declared variant is reported, good and bad; read results with multiple testing in mind.</p></div>
+  </div>
+  <h3>What the data do not support</h3>
+  <ul>
+    <li>Next-day predictability of G10 FX from US policy odds: one-day predictive t-statistics are below 1 and the weekend test is null.</li>
+    <li>Country-relative G10 signals: non-US cells had almost no liquid contracts in 2024-2025. This is changing (UK fiscal at {{cov_uk_fis_26}} in 2026).</li>
+    <li>Carry protection from a geopolitical overlay: the window had no carry crash to insure, Middle East escalation helped a long-oil book, and the overlay's gain rests on one contract in one month.</li>
+    <li>The 20-day rule: its horizon was chosen after seeing the data and its 2026 Sharpe is mostly rebalancing-phase luck.</li>
+    <li>Fiscal sign conventions: shutdown contracts use a generic "higher fiscal risk" sign, election contracts cost A1 money in 2024-2025, and the fiscal-dominance indicator was active on {{regime_days_25}} days.</li>
+    <li>Costs rely on Bloomberg composite bid-ask quotes, probably wider than dealable spreads; A's daily turnover makes its net Sharpe very sensitive to this.</li>
+    <li>{{n_years}} years of data ({{n_days}} trading days): every confidence interval on this page is wide.</li>
+  </ul>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Replication package</h3>
+      <p>One command (<code>run_all.py</code>) rebuilds every table, figure and this page. Pinned environment; data access documented per source (prediction-market panels confidential); a dated decision log; an AI log of prompts and generated code. Repository: <a href="https://github.com/Romain-Alm/230gb-pm-fx">github.com/Romain-Alm/230gb-pm-fx</a>.</p>
+    </div>
+    <div class="card">
+      <h3>Natural extensions</h3>
+      <ul>
+        <li>Kalshi vs Polymarket disagreement on the same FOMC meeting.</li>
+        <li>Non-US cells as coverage grows.</li>
+        <li>A bond leg for fiscal news.</li>
+        <li>OIS and fed funds futures as a benchmark for Fed news.</li>
+        <li>Regime detection on fiscal news days only.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>Built {{built}} from the replication package, results/site_data/. Statistics annualised over 252 days; returns close-to-close at the {{snapshot_time}} London snapshot. Event annotations are illustrative only.</footer>
+
+<script>window.DATA = {{DATA_JSON}};</script>
+<script>{{PLOTLY}}</script>
+<script>{{JS}}</script>
+</body>
+</html>

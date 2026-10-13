@@ -1,6 +1,6 @@
 # Quantitative results: prediction markets x FX (MFE 230GB)
 
-Generated on 2026-10-07 by `src/report/summary_md.py` from the result files. Every number comes from the CSV/Parquet files listed in each section; nothing is typed by hand.
+Generated on 2026-10-12 by `src/report/summary_md.py` from the result files. Every number comes from the CSV/Parquet files listed in each section; nothing is typed by hand.
 
 > **Definitive run (DECISIONS D28).** FX spot, 1-month forwards and 1-month NDFs: Bloomberg (default close, no 16:00 London fix); MSCI World net TR, S&P 500 TR, DXY, Brent: Bloomberg; VIX: Cboe via WRDS; 10-year yields: official sources (US Treasury, Bundesbank, Bank of England, MOF Japan). Signals are taken at the 16:00 London snapshot and executed at the next close: the same day's New York close for the G10 and Latin America, the next day's Asian close for KRW. Costs: half of the delivered forward bid/ask spread, causal rolling median over 20 days.
 
@@ -15,7 +15,7 @@ Sample: 2024-01-01 to 2026-09-24; in-sample 2024-2025, out-of-sample from 2026-0
 - **Sources**: tables in `results/strategy_a/`, `results/strategy_b/`, `results/robustness/`, `results/risk/`, `results/weekend/`, `results/leadlag/`; figures in `results/figures/`; data for a web page in `results/site_data/`; step-by-step explanations in `notebooks/02_strategies_tests_results.ipynb`.
 - **Scope frozen** (final freeze of 2026-10-03, `DECISIONS.md`): no rule or variant will be added.
 - **Slide figures**: `results/figures/slides/` (1920 x 1080, PNG and SVG, no in-figure title; data in `results/site_data/slide_*.csv`).
-- **Pending**: (1) hand validation of the classification: label the four files `ai_log/classification/validation_sheet_1.csv` to `_4.csv` (50 rows each; guide: `LABELLING_GUIDE.md`), then run `.venv/Scripts/python.exe -m src.pm.validation score` (accuracy per field: theme, zone, direction; shown automatically in section 1); (2) HTML page (data ready in `results/site_data/`); (3) list of the AI conversations used for design and review (`ai_log/design_conversations.md`, to be filled from the exports).
+- **Interactive page**: `site/index.html` (self-contained, rebuilt by `run_all.py --stage site`).
 
 
 **Glossary of strategies**:
@@ -108,7 +108,12 @@ Hourly lead-lag (D26): the dollar moves first or at the same time (section 7b).
 Contracts in the panel: 9,103; by unit: prob 5,818, hazard 2,974, bp 197, pp 98, pct 16 (hazard = deadline markets valued as hazard rates, D18).
 
 
-**Hand validation**: 200 events to label (`ai_log/classification/validation_sheet_1.csv` to `_4.csv`), score not computed yet.
+**Hand validation** (200 markets, stratified by predicted theme; share of hand labels the rules match; zone and direction on the macro labels only). Adjudicated row: disagreements reviewed (`validation_adjudication.csv`).
+
+| labels | n_labelled | theme_accuracy | zone_accuracy_macro | direction_accuracy_macro |
+|---|---|---|---|---|
+| blind | 200 | 0.90 | 0.81 | 0.71 |
+| adjudicated | 200 | 0.92 | 0.82 | 0.78 |
 
 
 ## 2. Coverage table (rule: at least 60% of weekdays covered in 2024-2025)
@@ -125,8 +130,8 @@ Contracts in the panel: 9,103; by unit: prob 5,818, hazard 2,974, bp 197, pp 98,
 | US | INFLATION | 25.0% | 27.7% | 64 | 39 | 9.01 | no |
 | KR | FISCAL_POLITICAL | 22.6% | 0.0% | 17 | 11 | 25.71 | no |
 | CN | TRADE_TARIFFS | 19.9% | 4.2% | 14 | 14 | 2.45 | no |
-| EA | FISCAL_POLITICAL | 7.6% | 17.8% | 11 | 8 | 2.36 | no |
 | UK | FISCAL_POLITICAL | 7.6% | 55.0% | 22 | 11 | 10.44 | no |
+| EA | FISCAL_POLITICAL | 7.6% | 17.8% | 11 | 8 | 2.36 | no |
 | MX | TRADE_TARIFFS | 6.1% | 0.0% | 7 | 7 | 0.50 | no |
 | CA | TRADE_TARIFFS | 5.0% | 0.0% | 6 | 6 | 0.39 | no |
 | KR | TRADE_TARIFFS | 4.2% | 0.0% | 1 | 1 | 0.22 | no |
@@ -217,25 +222,25 @@ Theory-signed rule (D2), net of costs except "_gross". A3 = A1 and A3+S = A1+S b
 | A1_theory_with_dollar_gross | 2024-2026 | 0.88 | 1.48 | [-0.24, 1.67] | 9.2% | 10.4% | -11.7% | 50.3% | -0.07 |  |  |
 | A1_theory_with_dollar_gross | 2026 (OOS) | 0.85 | 0.74 | [-2.25, 2.49] | 9.1% | 10.7% | -11.6% | 52.9% | -0.19 |  |  |
 | A2_theory_with_dollar | 2024-2025 | 0.71 | 1.02 | [-0.17, 1.68] | 7.2% | 10.2% | -11.9% | 49.1% | 0.14 | 173.18 | 6.2% |
-| A2_theory_with_dollar | 2024-2026 | 0.81 | 1.36 | [-0.25, 1.60] | 8.2% | 10.2% | -11.9% | 50.1% | -0.0013 | 188.28 | 6.3% |
-| A2_theory_with_dollar | 2026 (OOS) | 1.08 | 0.94 | [-1.87, 2.29] | 11.1% | 10.3% | -11.8% | 52.9% | -0.39 | 229.62 | 6.7% |
+| A2_theory_with_dollar | 2024-2026 | 0.81 | 1.36 | [-0.25, 1.60] | 8.2% | 10.2% | -11.9% | 50.1% | -0.0014 | 188.25 | 6.3% |
+| A2_theory_with_dollar | 2026 (OOS) | 1.08 | 0.94 | [-1.87, 2.29] | 11.1% | 10.3% | -11.8% | 52.9% | -0.39 | 229.53 | 6.7% |
 | A2_theory_with_dollar_gross | 2024-2025 | 1.31 | 1.89 | [0.47, 2.35] | 13.4% | 10.2% | -10.1% | 51.1% | 0.19 |  |  |
 | A2_theory_with_dollar_gross | 2024-2026 | 1.43 | 2.41 | [0.37, 2.25] | 14.6% | 10.2% | -10.1% | 52.2% | 0.04 |  |  |
 | A2_theory_with_dollar_gross | 2026 (OOS) | 1.75 | 1.53 | [-1.19, 2.88] | 17.8% | 10.2% | -9.4% | 55.5% | -0.38 |  |  |
 | A2_theory_dollar_neutral | 2024-2025 | -1.14 | -1.65 | [-2.66, 0.52] | -6.0% | 5.3% | -16.9% | 34.2% | 0.15 | 200.33 | 6.5% |
-| A2_theory_dollar_neutral | 2024-2026 | -0.95 | -1.60 | [-2.22, 0.30] | -5.3% | 5.6% | -21.9% | 38.2% | -0.0006 | 230.88 | 7.1% |
-| A2_theory_dollar_neutral | 2026 (OOS) | -0.53 | -0.46 | [-2.43, 1.39] | -3.4% | 6.4% | -8.2% | 49.2% | -0.25 | 314.56 | 8.6% |
+| A2_theory_dollar_neutral | 2024-2026 | -0.95 | -1.60 | [-2.22, 0.30] | -5.3% | 5.6% | -21.9% | 38.2% | -0.0007 | 230.88 | 7.1% |
+| A2_theory_dollar_neutral | 2026 (OOS) | -0.53 | -0.46 | [-2.43, 1.39] | -3.4% | 6.4% | -8.2% | 49.2% | -0.25 | 314.55 | 8.6% |
 | A1+S_theory_with_dollar | 2024-2025 | -0.11 | -0.16 | [-1.18, 0.96] | -1.1% | 9.9% | -17.8% | 48.0% | 0.04 | 175.89 | 6.7% |
-| A1+S_theory_with_dollar | 2024-2026 | -0.21 | -0.35 | [-1.35, 0.55] | -2.1% | 9.9% | -17.8% | 47.9% | -0.02 | 202.55 | 7.6% |
-| A1+S_theory_with_dollar | 2026 (OOS) | -0.48 | -0.42 | [-3.16, 1.10] | -4.7% | 9.8% | -12.8% | 47.6% | -0.19 | 275.54 | 9.9% |
+| A1+S_theory_with_dollar | 2024-2026 | -0.21 | -0.35 | [-1.35, 0.55] | -2.1% | 9.9% | -17.8% | 47.9% | -0.02 | 202.54 | 7.6% |
+| A1+S_theory_with_dollar | 2026 (OOS) | -0.48 | -0.42 | [-3.16, 1.10] | -4.7% | 9.8% | -12.8% | 47.6% | -0.19 | 275.53 | 9.9% |
 | A1+S_theory_dollar_neutral | 2024-2025 | -0.14 | -0.20 | [-1.49, 1.02] | -0.9% | 6.4% | -10.9% | 37.1% | 2.06 | 184.48 | 8.0% |
-| A1+S_theory_dollar_neutral | 2024-2026 | -0.71 | -1.20 | [-1.88, 0.38] | -4.5% | 6.3% | -19.7% | 40.3% | 1.51 | 218.46 | 8.9% |
-| A1+S_theory_dollar_neutral | 2026 (OOS) | -2.48 | -2.16 | [-3.81, -0.85] | -14.3% | 5.7% | -10.6% | 49.2% | -0.64 | 311.50 | 11.4% |
+| A1+S_theory_dollar_neutral | 2024-2026 | -0.71 | -1.20 | [-1.88, 0.38] | -4.5% | 6.3% | -19.7% | 40.3% | 1.51 | 218.47 | 8.9% |
+| A1+S_theory_dollar_neutral | 2026 (OOS) | -2.48 | -2.16 | [-3.81, -0.85] | -14.3% | 5.7% | -10.6% | 49.2% | -0.65 | 311.54 | 11.4% |
 | A2+S_theory_with_dollar | 2024-2025 | -0.16 | -0.22 | [-1.11, 0.89] | -1.5% | 9.9% | -19.3% | 46.7% | 0.27 | 215.64 | 7.5% |
-| A2+S_theory_with_dollar | 2024-2026 | 0.23 | 0.39 | [-0.89, 1.10] | 2.3% | 9.9% | -19.3% | 48.5% | 0.30 | 223.63 | 7.6% |
-| A2+S_theory_with_dollar | 2026 (OOS) | 1.28 | 1.11 | [-1.42, 2.95] | 12.7% | 9.9% | -10.4% | 53.4% | 0.40 | 245.54 | 7.8% |
+| A2+S_theory_with_dollar | 2024-2026 | 0.23 | 0.39 | [-0.89, 1.10] | 2.3% | 9.9% | -19.3% | 48.5% | 0.30 | 223.62 | 7.6% |
+| A2+S_theory_with_dollar | 2026 (OOS) | 1.28 | 1.11 | [-1.42, 2.96] | 12.7% | 9.9% | -10.4% | 53.4% | 0.40 | 245.48 | 7.8% |
 | A2+S_theory_dollar_neutral | 2024-2025 | -1.51 | -2.18 | [-2.48, -0.59] | -10.4% | 6.8% | -20.8% | 40.3% | 1.45 | 288.63 | 10.4% |
-| A2+S_theory_dollar_neutral | 2024-2026 | -1.67 | -2.81 | [-2.56, -0.83] | -11.1% | 6.7% | -29.0% | 41.2% | 1.15 | 300.93 | 10.5% |
+| A2+S_theory_dollar_neutral | 2024-2026 | -1.67 | -2.81 | [-2.56, -0.83] | -11.1% | 6.7% | -29.0% | 41.2% | 1.15 | 300.94 | 10.5% |
 | A2+S_theory_dollar_neutral | 2026 (OOS) | -2.16 | -1.88 | [-3.43, -0.01] | -13.2% | 6.1% | -10.5% | 43.5% | -0.02 | 334.63 | 10.6% |
 | A1_theory_with_dollar_D12 | 2024-2025 | -0.48 | -0.69 | [-1.66, 0.69] | -5.0% | 10.4% | -21.8% | 45.7% | -0.52 |  |  |
 | A1_theory_with_dollar_D12 | 2024-2026 | -0.47 | -0.79 | [-1.56, 0.43] | -4.9% | 10.5% | -21.8% | 45.8% | -0.38 |  |  |
@@ -287,8 +292,8 @@ Theory-signed rule (D2), net of costs except "_gross". A3 = A1 and A3+S = A1+S b
 | A1_theory_with_dollar_cost0.5x | 2024-2026 | 0.65 | 1.10 | [-0.48, 1.44] | 6.8% | 10.4% | -12.8% | 49.6% | -0.10 | 132.57 | 2.3% |
 | A1_theory_with_dollar_cost0.5x | 2026 (OOS) | 0.56 | 0.49 | [-2.59, 2.20] | 6.0% | 10.7% | -12.8% | 51.3% | -0.20 | 179.65 | 3.0% |
 | A2_theory_with_dollar_cost0.5x | 2024-2025 | 1.01 | 1.46 | [0.16, 2.00] | 10.3% | 10.2% | -11.1% | 50.5% | 0.16 | 173.18 | 3.1% |
-| A2_theory_with_dollar_cost0.5x | 2024-2026 | 1.12 | 1.88 | [0.05, 1.93] | 11.4% | 10.2% | -11.1% | 51.5% | 0.02 | 188.28 | 3.2% |
-| A2_theory_with_dollar_cost0.5x | 2026 (OOS) | 1.41 | 1.23 | [-1.53, 2.59] | 14.4% | 10.2% | -10.6% | 54.5% | -0.38 | 229.62 | 3.4% |
+| A2_theory_with_dollar_cost0.5x | 2024-2026 | 1.12 | 1.88 | [0.05, 1.94] | 11.4% | 10.2% | -11.1% | 51.5% | 0.02 | 188.25 | 3.2% |
+| A2_theory_with_dollar_cost0.5x | 2026 (OOS) | 1.42 | 1.23 | [-1.53, 2.59] | 14.5% | 10.2% | -10.6% | 54.5% | -0.38 | 229.53 | 3.4% |
 | A1_theory_with_dollar_weekly_cost0.5x | 2024-2025 | 0.97 | 1.40 | [-0.21, 1.93] | 9.9% | 10.1% | -8.7% | 49.5% | -0.04 | 57.05 | 1.0% |
 | A1_theory_with_dollar_weekly_cost0.5x | 2024-2026 | 0.86 | 1.45 | [-0.20, 1.72] | 8.9% | 10.3% | -10.7% | 50.8% | -0.07 | 62.76 | 1.1% |
 | A1_theory_with_dollar_weekly_cost0.5x | 2026 (OOS) | 0.56 | 0.49 | [-1.78, 2.01] | 6.1% | 10.8% | -10.7% | 54.5% | -0.12 | 78.37 | 1.3% |
@@ -471,48 +476,48 @@ Reading: the `_fiscal_x_regime` line cannot be interpreted (regime active on abo
 
 | model | component | coef | t | n_obs |
 |---|---|---|---|---|
-| A1+GEO_weekend_gap_london | MONETARY | 0.0000 | 0.0035 | 1,278 |
-| A1+GEO_weekend_gap_london | FISCAL_POLITICAL | 0.0001 | 0.59 | 1,278 |
+| A1+GEO_weekend_gap_london | MONETARY | -0.0000 | -0.07 | 1,278 |
+| A1+GEO_weekend_gap_london | FISCAL_POLITICAL | 0.0001 | 0.58 | 1,278 |
 | A1+GEO_weekend_gap_london | SPILL_GLOBAL_GEOPOLITICS | -0.0002 | -0.62 | 1,278 |
-| A1+GEO_weekend_gap_ny | MONETARY | 0.0005 | 1.27 | 1,272 |
-| A1+GEO_weekend_gap_ny | FISCAL_POLITICAL | -0.0001 | -0.64 | 1,272 |
-| A1+GEO_weekend_gap_ny | SPILL_GLOBAL_GEOPOLITICS | 0.0001 | 0.74 | 1,272 |
-| A1_weekend_gap_london | MONETARY | 0.0000 | 0.03 | 1,278 |
-| A1_weekend_gap_london | FISCAL_POLITICAL | 0.0001 | 0.52 | 1,278 |
-| A1_weekend_gap_ny | MONETARY | 0.0005 | 1.26 | 1,272 |
-| A1_weekend_gap_ny | FISCAL_POLITICAL | -0.0001 | -0.60 | 1,272 |
-| A1+S_weekend_gap_london | MONETARY | 0.0000 | 0.02 | 1,278 |
-| A1+S_weekend_gap_london | FISCAL_POLITICAL | 0.0001 | 0.58 | 1,278 |
+| A1+GEO_weekend_gap_ny | MONETARY | 0.0005 | 1.30 | 1,272 |
+| A1+GEO_weekend_gap_ny | FISCAL_POLITICAL | -0.0001 | -0.66 | 1,272 |
+| A1+GEO_weekend_gap_ny | SPILL_GLOBAL_GEOPOLITICS | 0.0001 | 0.75 | 1,272 |
+| A1_weekend_gap_london | MONETARY | -0.0000 | -0.04 | 1,278 |
+| A1_weekend_gap_london | FISCAL_POLITICAL | 0.0001 | 0.51 | 1,278 |
+| A1_weekend_gap_ny | MONETARY | 0.0005 | 1.29 | 1,272 |
+| A1_weekend_gap_ny | FISCAL_POLITICAL | -0.0001 | -0.62 | 1,272 |
+| A1+S_weekend_gap_london | MONETARY | -0.0000 | -0.05 | 1,278 |
+| A1+S_weekend_gap_london | FISCAL_POLITICAL | 0.0001 | 0.57 | 1,278 |
 | A1+S_weekend_gap_london | SPILL_GLOBAL_GEOPOLITICS | -0.0002 | -0.62 | 1,278 |
 | A1+S_weekend_gap_london | SPILL_GLOBAL_GEO_OIL | -0.0000 | -0.06 | 1,278 |
-| A1+S_weekend_gap_london | SPILL_CN_TRADE_TARIFFS | 0.0004 | 1.38 | 1,278 |
-| A1+S_weekend_gap_ny | MONETARY | 0.0005 | 1.28 | 1,272 |
-| A1+S_weekend_gap_ny | FISCAL_POLITICAL | -0.0001 | -0.66 | 1,272 |
-| A1+S_weekend_gap_ny | SPILL_GLOBAL_GEOPOLITICS | 0.0001 | 0.74 | 1,272 |
-| A1+S_weekend_gap_ny | SPILL_GLOBAL_GEO_OIL | 0.0000 | 0.28 | 1,272 |
-| A1+S_weekend_gap_ny | SPILL_CN_TRADE_TARIFFS | 0.0005 | 3.46 | 1,272 |
-| A2_weekend_gap_london | MONETARY | -0.0000 | -0.0069 | 1,278 |
-| A2_weekend_gap_london | INFLATION | -0.0002 | -1.50 | 1,278 |
-| A2_weekend_gap_london | FISCAL_POLITICAL | 0.0001 | 0.40 | 1,278 |
-| A2_weekend_gap_ny | MONETARY | 0.0004 | 1.20 | 1,272 |
-| A2_weekend_gap_ny | INFLATION | -0.0001 | -1.76 | 1,272 |
-| A2_weekend_gap_ny | FISCAL_POLITICAL | -0.0001 | -0.72 | 1,272 |
-| A2+S_weekend_gap_london | MONETARY | 0.0001 | 0.15 | 1,278 |
-| A2+S_weekend_gap_london | INFLATION | -0.0002 | -1.09 | 1,278 |
-| A2+S_weekend_gap_london | FISCAL_POLITICAL | 0.0001 | 0.36 | 1,278 |
-| A2+S_weekend_gap_london | TRADE_TARIFFS | -0.0005 | -0.99 | 1,278 |
+| A1+S_weekend_gap_london | SPILL_CN_TRADE_TARIFFS | 0.0004 | 1.26 | 1,278 |
+| A1+S_weekend_gap_ny | MONETARY | 0.0005 | 1.31 | 1,272 |
+| A1+S_weekend_gap_ny | FISCAL_POLITICAL | -0.0001 | -0.68 | 1,272 |
+| A1+S_weekend_gap_ny | SPILL_GLOBAL_GEOPOLITICS | 0.0001 | 0.75 | 1,272 |
+| A1+S_weekend_gap_ny | SPILL_GLOBAL_GEO_OIL | 0.0000 | 0.26 | 1,272 |
+| A1+S_weekend_gap_ny | SPILL_CN_TRADE_TARIFFS | 0.0004 | 4.61 | 1,272 |
+| A2_weekend_gap_london | MONETARY | -0.0000 | -0.06 | 1,278 |
+| A2_weekend_gap_london | INFLATION | -0.0002 | -1.32 | 1,278 |
+| A2_weekend_gap_london | FISCAL_POLITICAL | 0.0001 | 0.39 | 1,278 |
+| A2_weekend_gap_ny | MONETARY | 0.0004 | 1.24 | 1,272 |
+| A2_weekend_gap_ny | INFLATION | -0.0001 | -1.36 | 1,272 |
+| A2_weekend_gap_ny | FISCAL_POLITICAL | -0.0001 | -0.73 | 1,272 |
+| A2+S_weekend_gap_london | MONETARY | 0.0000 | 0.10 | 1,278 |
+| A2+S_weekend_gap_london | INFLATION | -0.0001 | -0.91 | 1,278 |
+| A2+S_weekend_gap_london | FISCAL_POLITICAL | 0.0001 | 0.37 | 1,278 |
+| A2+S_weekend_gap_london | TRADE_TARIFFS | -0.0005 | -0.96 | 1,278 |
 | A2+S_weekend_gap_london | GEOPOLITICS | 0.0006 | 1.22 | 1,278 |
-| A2+S_weekend_gap_london | SPILL_GLOBAL_GEOPOLITICS | -0.0001 | -0.47 | 1,278 |
-| A2+S_weekend_gap_london | SPILL_GLOBAL_GEO_OIL | 0.0000 | 0.10 | 1,278 |
-| A2+S_weekend_gap_london | SPILL_CN_TRADE_TARIFFS | 0.0002 | 0.56 | 1,278 |
-| A2+S_weekend_gap_ny | MONETARY | 0.0005 | 1.39 | 1,272 |
-| A2+S_weekend_gap_ny | INFLATION | -0.0001 | -0.89 | 1,272 |
+| A2+S_weekend_gap_london | SPILL_GLOBAL_GEOPOLITICS | -0.0001 | -0.48 | 1,278 |
+| A2+S_weekend_gap_london | SPILL_GLOBAL_GEO_OIL | 0.0000 | 0.09 | 1,278 |
+| A2+S_weekend_gap_london | SPILL_CN_TRADE_TARIFFS | 0.0001 | 0.37 | 1,278 |
+| A2+S_weekend_gap_ny | MONETARY | 0.0005 | 1.44 | 1,272 |
+| A2+S_weekend_gap_ny | INFLATION | -0.0001 | -0.64 | 1,272 |
 | A2+S_weekend_gap_ny | FISCAL_POLITICAL | -0.0002 | -0.82 | 1,272 |
-| A2+S_weekend_gap_ny | TRADE_TARIFFS | -0.0004 | -1.02 | 1,272 |
-| A2+S_weekend_gap_ny | GEOPOLITICS | 0.0005 | 1.62 | 1,272 |
-| A2+S_weekend_gap_ny | SPILL_GLOBAL_GEOPOLITICS | 0.0002 | 0.86 | 1,272 |
-| A2+S_weekend_gap_ny | SPILL_GLOBAL_GEO_OIL | 0.0001 | 0.40 | 1,272 |
-| A2+S_weekend_gap_ny | SPILL_CN_TRADE_TARIFFS | 0.0003 | 1.08 | 1,272 |
+| A2+S_weekend_gap_ny | TRADE_TARIFFS | -0.0004 | -1.04 | 1,272 |
+| A2+S_weekend_gap_ny | GEOPOLITICS | 0.0006 | 1.63 | 1,272 |
+| A2+S_weekend_gap_ny | SPILL_GLOBAL_GEOPOLITICS | 0.0002 | 0.87 | 1,272 |
+| A2+S_weekend_gap_ny | SPILL_GLOBAL_GEO_OIL | 0.0001 | 0.37 | 1,272 |
+| A2+S_weekend_gap_ny | SPILL_CN_TRADE_TARIFFS | 0.0002 | 0.82 | 1,272 |
 
 
 ## 5. Strategy B: EM carry (IRR 12-13 universe) with a PM geopolitical overlay
@@ -790,7 +795,7 @@ The 20% cap cannot be met with fewer than three currencies per leg; weights are 
 |---|---|---|---|---|
 | actual | 1 | -0.71 | -0.71 | -0.71 |
 | equal_weights | 1 | -0.86 | -0.86 | -0.86 |
-| halflife | 4 | -0.68 | -1.74 | -0.01 |
+| halflife | 4 | -0.68 | -1.74 | -0.0079 |
 | leave_one_event_out | 10 | -0.70 | -0.71 | -0.57 |
 | placebo_a_shuffle | 100 | -3.73 | -4.87 | -2.32 |
 | placebo_b_random_contracts | 1 | -1.00 | -1.00 | -1.00 |
@@ -927,7 +932,7 @@ Reading:
 | A1_theory_with_dollar | msci_world | -0.06 | -0.13 | 21 | 25.28 |
 | A1_theory_with_dollar | em_carry | -0.08 | 0.0079 | 20 | 37.21 |
 | A1+S_theory_with_dollar | msci_world | -0.04 | -0.09 | 21 | 9.94 |
-| A1+S_theory_with_dollar | em_carry | -0.08 | 0.04 | 20 | 18.52 |
+| A1+S_theory_with_dollar | em_carry | -0.08 | 0.04 | 20 | 18.50 |
 | A2_theory_with_dollar | msci_world | -0.24 | -0.81 | 21 | 70.83 |
 | A2_theory_with_dollar | em_carry | 0.04 | 0.05 | 20 | 2.79 |
 | base_carry | msci_world | -0.02 | 0.0003 | 21 | 12.38 |
@@ -1031,7 +1036,7 @@ Mean annual return:
 | tercile | A1+S_theory_with_dollar | A1_theory_with_dollar | A2_theory_with_dollar | base_carry | pm_timed | vix_timed |
 |---|---|---|---|---|---|---|
 | low spreads | -1.2% | 3.2% | 6.8% | 25.5% | 22.0% | 24.5% |
-| middle spreads | 8.8% | 14.2% | 13.9% | 6.9% | 11.3% | 3.2% |
+| middle spreads | 8.9% | 14.2% | 13.9% | 6.9% | 11.3% | 3.2% |
 | high spreads | -13.8% | -3.9% | 4.1% | 6.6% | 1.4% | 4.0% |
 
 

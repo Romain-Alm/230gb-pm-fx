@@ -23,7 +23,7 @@ written at the same time and run after every change.
 
 | Material | Files | Decisions | Human role |
 |---|---|---|---|
-| Project plan and scope cuts | `progress/PLAN.md`, `DECISIONS.md` | D1 to D12 | Team chose the scope, data sources and the primary Strategy A rule |
+| Project plan and scope cuts | `progress/PLAN.md` (working notes, not in the repository), `DECISIONS.md` | D1 to D12 | Team chose the scope, data sources and the primary Strategy A rule |
 | Data loaders and snapshot alignment | `src/data/pm_markets.py`, `src/data/pm_panel.py`, `src/common.py` | D3, D6, D7, D9, D10 | Reviewed; data tests in `tests/test_pm.py` |
 | Classification rules (themes, zones, directions, buckets) | `src/pm/classify.py`, `data/manual/party_fiscal_stance.csv` | D1 | Checked on a hand-labelled random sample (`ai_log/classification/`) |
 | Contract panel, inclusion rules, theme indices, coverage | `src/pm/contracts.py`, `src/pm/indices.py`, `src/pm/coverage.py` | D11, D12, D13, D18, D19 | Reviewed against spec 4.1 to 4.5; coverage decisions taken by the team (D13 to D15) |
@@ -72,22 +72,26 @@ written at the same time and run after every change.
 | Analysis figures, slide figures, data for the web page | `src/report/figures_pm.py`, `src/report/figures_strategies.py`, `src/report/figures_slides.py`, `src/report/site_data.py` | Team chose the slide figures |
 | Leverage and exposure report, liquidity conditioning | `src/risk/leverage.py`, `src/risk/run_risk.py` | Team asked for them (assignment: leverage, liquidity risk) |
 | Notebooks | `notebooks/build_notebooks.py`, `notebooks/nb01_cells.py`, `notebooks/nb02_cells.py` | Reviewed |
-| Market data request, progress notes | `progress/DATA_REQUEST.md`, `progress/*.md` | Team set the audience and the content |
+| Market data request, progress notes | `progress/DATA_REQUEST.md`, `progress/*.md` (working notes, not in the repository) | Team set the audience and the content |
 | Labelling guide and split validation sheets | `ai_log/classification/LABELLING_GUIDE.md`, `validation_sheet_1.csv` to `_4.csv`, `load_labels` in `src/pm/validation.py` | The labels themselves are written by the team, without AI |
 | Replication package: README, pinned requirements | `README.md`, `requirements.txt` | Reviewed |
+| Strategy A explained (2026-10-07): signal chain, US fiscal cell content, dollar momentum diagnostic, 2026 drawdown | `src/report/strategy_a_explained.py`, `results/notes/strategy_a_explained.md` | Team set the questions; diagnostic only, no rule change |
+| Strategy A checks for the presentation (2026-10-08): Fed-related contracts, 2026 windows, MONETARY index drift | `src/report/strategy_a_checks.py`, `results/notes/strategy_a_checks.md` | Team set the questions; diagnostic only, no rule change |
+| Interactive HTML page (2026-10-10 and 11): data exports, page builder, template, styles, charts, consistency test | `src/report/build_site.py`, `src/report/site/`, `src/report/site_data.py`, `src/report/figures_slides.py`, `run_all.py`, `tests/test_site.py`, `site/index.html` | Team wrote the design brief and ten amendments (`ai_log/html_page_brief.md`) and reviewed the page, then asked for a warmer colour scheme and more interaction (themes, motion, replay, sparklines, range strips), a worked example of the signal chain for the instructor, a real hazard-rate example, a shorter page and a scrolling introduction; no rule change |
+| Classification validation scoring (2026-10-12): merge of the labelled sheets, accuracy per field on the blind labels and after review of the disagreements, validation line on the page | `src/pm/validation.py`, `ai_log/classification/validation_adjudication.csv`, `src/report/summary_md.py`, `src/report/build_site.py`, `tests/test_site.py` | none (reporting) | Team labelled the 200 markets and decided the theme and zone disagreements; Claude Code proposed the direction decisions (each with its reason in the adjudication file), which the team accepted; no rule change |
 
 `DECISIONS.md` entries were drafted by Claude Code from the team's decisions; the decisions
 themselves (scope, rules, labels, freezes) were taken by the team.
 
-## Reused code (not AI-generated in this project, not included in the repository)
+## Reused code (not AI-generated in this project)
 
 - `src/pm/vendor/geo_registry.py` and `people_generated.py`: the geographic entity resolver of the
-  Kairos cross-venue arbitrage project, copied verbatim and used by `src/pm/classify.py`.
-- `src/pm/vendor/classifier_v2.py`: the Kairos main repository's rule classifier, kept as a
-  reference for the theme rules (not imported).
+  Kairos cross-venue arbitrage project, copied verbatim and used by `src/pm/classify.py`
+  (included).
+- The Kairos main repository's rule classifier (`classifier_v2.py`) was used as a reference for the
+  theme rules; it is not imported and not included.
 
-Kairos is a separate project of the team (using other projects is allowed by the assignment). Its
-code is confidential and is not included in the submitted repository (see `README.md`).
+Kairos is a separate project of the team (using other projects is allowed by the assignment).
 
 ## Prompts
 

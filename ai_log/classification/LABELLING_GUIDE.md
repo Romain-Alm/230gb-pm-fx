@@ -2,8 +2,7 @@
 
 ## Why this exists
 
-Every prediction-market contract used in the project is classified by deterministic rules
-(regular expressions, a country resolver and a few lookup tables; no LLM). The rules decide which
+Every prediction-market contract used in the project is classified by deterministic rules. The rules decide which
 contracts enter the theme indices, in which currency zone, and with which sign. If they are
 wrong, the signals are wrong.
 
@@ -17,7 +16,7 @@ as it comes out and nothing is tuned on it.
 ## Ground rules
 
 - **Blind.** Do not open `validation_key.csv` (the rules' answers) before all 200 lines are done.
-- **No LLM, no lookup of the rules' output.** Your own judgement is the reference.
+-  Your own judgement is the reference.
 - Use only the title and the event name. When the market is unclear, use your best reading and
   write a note.
 - About 1 hour for two people. Take two files each, then go through the doubtful lines together.

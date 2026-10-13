@@ -11,7 +11,7 @@ We build continuous macro theme indices from Polymarket and Kalshi contracts (mo
 inflation, fiscal and political outcomes, trade and tariffs, geopolitics) and use them in two
 strategies:
 
-- **Strategy A (G10).** Only US cells pass the coverage rule (DECISIONS D13), so the primary rule
+- **Strategy A (G10).** Only US cells pass the coverage rule (D13), so the primary rule
   (A1) is a dollar signal: US MONETARY and US FISCAL news, with theory-given signs and a
   regime-dependent fiscal sign (D2, D15), drive a G10 basket against USD. Variants A2 and A3 and
   the "+S" spillover versions are pre-declared (D14, D17).
@@ -21,71 +21,85 @@ strategies:
   the same rule driven by VIX.
 
 Where to read the results:
+- `deliverables/`: the interactive page, the presentation and a short guide.
 - `results/RESULTS.md`: every number, with a reading guide, the status of each result
   (pre-registered or a posteriori) and the caveats. Generated from the result files.
-- `DECISIONS.md`: every choice not fixed by `PROJECT_SPEC.md`, dated, logged before the backtest it
-  affects (D1 to D31, then the final freeze).
 - `notebooks/01_prediction_market_layer.ipynb`, `notebooks/02_strategies_tests_results.ipynb`
   : step-by-step walk-through, executed.
 - `results/figures/` (analysis figures), `results/figures/slides/` (presentation figures),
   `results/site_data/` (every table and series for the web page, with its own README).
 
-## Environment
+## Reproduce
 
-- Python **3.13.13** (Windows 10/Server 2025; any OS should work, paths are relative).
-- Exact package versions: `requirements.txt` (pinned from the working environment).
+Three steps. Paths are relative; Python **3.13.13** (tested on Windows Server 2025; Linux/macOS use
+`.venv/bin/python` in place of `.venv/Scripts/python.exe`).
+
+**1. Environment.**
 
 ```
 python -m venv .venv
-.venv/Scripts/python.exe -m pip install -r requirements.txt     # Linux/macOS: .venv/bin/python
-.venv/Scripts/python.exe -m pytest tests                        # 58 tests (spec 12); 34 are skipped without the confidential inputs
+.venv/Scripts/python.exe -m pip install -r requirements.txt
 ```
 
-## Reproduce: one command
+**2. Market data (Bloomberg and WRDS, licensed).** The only input not in this repository: two files
+shared with the instructor through a restricted Google Drive folder (Berkeley access). Copy them to:
 
-**Confidential inputs.** Part of the data and code is confidential and not in this repository
-(next section): the prediction-market data and the panels derived from them, and the
-classification code of the Kairos project. With this repository alone, the `pm` stage cannot run
-and the stages after it have no prediction-market input; every output of the full run is in
-`results/`. With the data and code in place:
+```
+data/raw/market/priority1_market_data.csv        # FX spot, forwards, NDFs, risk series, 10-year yields
+data/raw/market_qc/priority1_qc_flags.csv        # QC flags of the delivery (blanked observations)
+```
+
+Without the Drive, the same series can be pulled from a Bloomberg terminal (tickers below) and
+WRDS, in the long format described under "Bloomberg".
+
+**3. Run.**
 
 ```
 .venv/Scripts/python.exe run_all.py
+.venv/Scripts/python.exe -m pytest tests
 ```
 
-This runs every stage in order: `pm` (prediction-market layer), `strategies`, `robustness`, `risk`,
-`figures` (figures, slide figures, `site_data/`, `RESULTS.md`). Each stage can be run alone with
-`--stage <name>`; `--skip-metadata` reuses the market-metadata scan. All parameters are in
-`config/config.yaml` (fixed seed 230, relative paths).
+`run_all.py` runs every stage in order: `pm` (classification, contract panels, theme indices),
+`strategies`, `robustness`, `risk`, `figures` (figures, `results/site_data/`, `results/RESULTS.md`
+and the interactive page `deliverables/index.html`). It rewrites `results/` and `deliverables/index.html`; compare with the
+committed versions (`git diff --stat results deliverables`). Each stage can be run alone with
+`--stage <name>` (`--stage site` rebuilds the page only). All parameters are in
+`config/config.yaml` (fixed seed 230).
+
+The prediction-market layer starts from the four panels in `data/processed/` (`pm_markets`,
+`pm_daily`, `weekend_changes`, `hourly_index`), built from the raw trades tape (about 75 GB, not
+shared). With the tape in place (`KAIROS_DATA_ROOT`, next section) the `pm` stage rebuilds them
+first.
 
 Expected runtime on the project machine (shared server):
 
 | Stage | Runtime |
 |---|---|
-| `pm` | about 25 minutes (12 for the one-time metadata scan) |
+| `pm` | about 15 minutes from the shipped panels (about 20 from the raw tape) |
 | `strategies` | about 1 minute |
-| `robustness` | about 25 minutes (100 placebo draws per test) |
+| `robustness` | about 30 minutes (100 placebo draws per test) |
 | `risk` | about 1 minute |
-| `figures` | about 1 minute |
-| **Total** | **about 55 minutes** |
+| `figures` | about 2 minutes |
+| **Total** | **about 50 minutes** |
+
+**Interactive HTML page (spec 11.2).** `deliverables/index.html` is one self-contained file (data, styles,
+scripts and the Plotly library inlined, about 2 MB): open it in a browser, no server and no network
+needed. It is generated by `src/report/build_site.py` from `results/site_data/` and the page sources
+in `src/report/site/`; every number in its prose is formatted in Python from the data files, and
+`tests/test_site.py` checks the page's data against `results/RESULTS.md`.
 
 The notebooks are rebuilt and executed with `.venv/Scripts/python.exe notebooks/build_notebooks.py`.
-The hand-labelled classification check is scored with `python -m src.pm.validation score`
-(guide: `ai_log/classification/LABELLING_GUIDE.md`).
+The classification check against 200 hand-labelled markets
+(`ai_log/classification/validation_sheet_*_human.csv`) is scored by the `pm` stage
+(`src/pm/validation.py`; accuracy per field in section 1 of `results/RESULTS.md`).
 
 ## Data
 
-**Some data are confidential and cannot be shared.** Licensed and confidential inputs are not in
-this repository:
-- the prediction-market data (Probalytics, accessed through the Kairos industry project, a
-  separate project of the team; using other projects is allowed by the assignment) and every
-  panel derived from them at contract level (`data/processed/`, not versioned);
-- the licensed market data (Bloomberg, WRDS) and the downloaded public data (`data/raw/`, not
-  versioned).
-
-What is shared: the code of this project, the hand-coded inputs (`data/manual/`), and every result
-(`results/`, including the aggregated theme indices and the geopolitical signals in
-`results/site_data/`).
+| Where | What |
+|---|---|
+| this repository | code, hand-coded inputs (`data/manual/`), the four prediction-market panels (`data/processed/`), hourly FX candles (`data/raw/intraday/dukascopy_hourly.parquet`), every result (`results/`) and the page (`deliverables/`) |
+| restricted Drive (instructor) | the Bloomberg/WRDS market file and its QC flags (step 2 above) |
+| not shared | the raw prediction-market trades tape (about 75 GB); the panels in `data/processed/` are built from it |
 
 | Data | Used for | Source and access |
 |---|---|---|
@@ -100,18 +114,20 @@ What is shared: the code of this project, the hand-coded inputs (`data/manual/`)
 
 ### Prediction markets (Probalytics)
 
-- The pipeline reads the Probalytics trades tape and market metadata from the Kairos data estate
-  (`KAIROS_DATA_ROOT`, default `D:/haas-mfe-g9-cg/kairos-data`; paths in `config/config.yaml`,
-  schemas in `data/SCHEMA.md`). Access is read-only.
-- The data are confidential: licensed to the Kairos industry project, they cannot be shared or
-  redistributed, nor can the contract-level panels built from them.
-- **Fallback without Probalytics**: the same trades can be collected from the venues' public APIs
-  and written in the schema of `data/SCHEMA.md`:
+- Source: the Probalytics trades tape and market metadata for Kalshi and Polymarket, 2024-01-01 to
+  2026-09-24. The four panels in `data/processed/` are built from them by `src/data/pm_markets.py`,
+  `src/data/pm_panel.py`, `src/pm/weekend.py` and `src/pm/hourly.py` (schemas in `data/SCHEMA.md`).
+- To rebuild them from the tape, set `KAIROS_DATA_ROOT` to the folder holding it (paths in
+  `config/config.yaml`); `run_all.py` then starts from the tape.
+- **Without the tape**: the same trades can be collected from the venues' public APIs and written
+  in the schema of `data/SCHEMA.md`:
   - Kalshi: `https://api.elections.kalshi.com/trade-api/v2` (endpoints `/markets` and
     `/markets/trades`);
   - Polymarket: Gamma API `https://gamma-api.polymarket.com` (markets and events) and Data API
     `https://data-api.polymarket.com/trades` (trades).
   Coverage and timestamps of a fresh pull may differ slightly from the archive.
+- The classification uses the geographic resolver of the team's Kairos project
+  (`src/pm/vendor/geo_registry.py`, `people_generated.py`), included.
 
 ### Bloomberg
 
@@ -154,34 +170,31 @@ BDH with default options (daily, no fill), fields `PX_BID`, `PX_ASK`, `PX_LAST`,
 The preliminary run on free data (D22) is `run_preliminary_free.py`; its results are in
 `results/preliminary_free/` and are superseded by `results/`.
 
-## Code from another project (Kairos, not included)
+## Code from another project (Kairos)
 
 The contract classification uses the geographic entity resolver of the Kairos project, a separate
-project of the team (using other projects is allowed by the assignment). This code is confidential
-and **not included**: it is expected in `src/pm/vendor/` (`geo_registry.py`, `people_generated.py`),
-which is not versioned. It is rule-based and calls no LLM or network service. Without it,
-`src/pm/classify.py` cannot be imported: the classification tests are skipped and the `pm` stage
-cannot run; the tests that need the processed panels are skipped too.
+project of the team (using other projects is allowed by the assignment): `src/pm/vendor/geo_registry.py`
+and `people_generated.py`, copied verbatim. It is rule-based and calls no LLM or network service.
 
 ## Repository
 
 ```
 config/            config.yaml (all parameters), market_series.yaml (raw-data mapping)
-data/              SCHEMA.md; manual/ hand-coded inputs; processed/ and raw/ confidential or licensed (not included)
+data/              SCHEMA.md; manual/ hand-coded inputs; processed/ prediction-market panels; raw/ market data (see Data)
 src/data/          prediction-market metadata and daily panel; market-data loader; free-data downloads
 src/pm/            classification (rules), contract panel, coverage, theme indices, shocks, weekend
-                   changes, hourly indices, validation (vendor/: Kairos code, not included)
+                   changes, hourly indices, validation (vendor/: Kairos geographic resolver)
 src/strategies/    strategy_a.py, strategy_b.py, run_a.py, run_b.py, diagnostics.py, weekend_test.py,
                    leadlag.py, d30_checks.py
 src/backtest/      engine (timing, volatility target, caps, no-trade band, costs), metrics, robustness
 src/risk/          betas, downside beta, episodes, conditional performance, liquidity, concentration,
                    A vs B, leverage
-src/report/        figures, slide figures, site data, RESULTS.md generator
+src/report/        figures, slide figures, site data, RESULTS.md generator, HTML page builder (site/)
 tests/             spec 12 tests (look-ahead, DST, causal inclusion, bracket EV, hazard, timing, costs)
 notebooks/         two executed walk-through notebooks and their builder
 results/           tables, figures, RESULTS.md (generated)
+deliverables/      index.html (the interactive page, generated), the presentation and a short guide
 ai_log/            AI use and the classification validation
-progress/          progress notes, plan and data request
 ```
 
 ## Main conventions

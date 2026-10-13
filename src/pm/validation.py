@@ -78,9 +78,10 @@ def make_sheet(cfg: dict | None = None, seed: int | None = None) -> pd.DataFrame
 
 
 def load_labels() -> pd.DataFrame:
-    """Labelled sheet: the four 50-row files validation_sheet_1.csv to _4.csv merged when they
-    exist (one per labeller), otherwise the single validation_sheet.csv."""
-    parts = sorted(OUT.glob("validation_sheet_[0-9].csv"))
+    """Labelled sheet: the four 50-row files merged when they exist (one per labeller), the
+    labelled copies validation_sheet_1_human.csv to _4_human.csv first, then the blank-named
+    validation_sheet_1.csv to _4.csv, otherwise the single validation_sheet.csv."""
+    parts = sorted(OUT.glob("validation_sheet_[0-9]_human.csv")) or sorted(OUT.glob("validation_sheet_[0-9].csv"))
     files = parts if parts else [OUT / "validation_sheet.csv"]
     sheet = pd.concat([pd.read_csv(f, dtype=str, encoding="utf-8-sig").fillna("") for f in files], ignore_index=True)
     if sheet["item"].duplicated().any():
@@ -90,9 +91,20 @@ def load_labels() -> pd.DataFrame:
     return sheet
 
 
-def score() -> pd.DataFrame:
-    sheet = load_labels()
-    key = pd.read_csv(OUT / "validation_key.csv", dtype=str).fillna("")
+def adjudicate(sheet: pd.DataFrame) -> pd.DataFrame:
+    """Labels after review of the disagreements: `validation_adjudication.csv` holds one row per
+    disputed (item, field) with the final value and who decided. Only disagreements are reviewed,
+    so the adjudicated score is an upper bound; the blind score stays the headline."""
+    adj = pd.read_csv(OUT / "validation_adjudication.csv", dtype=str, encoding="utf-8-sig").fillna("")
+    out = sheet.set_index("item")
+    for r in adj.itertuples():
+        out.at[r.item, f"label_{r.field}"] = r.final
+    other = out["label_theme"].str.upper() == "OTHER"
+    out.loc[other, ["label_zone", "label_direction"]] = ""
+    return out.reset_index()
+
+
+def _compare(sheet: pd.DataFrame, key: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     m = sheet.merge(key, on=["item", "platform", "platform_id"])
     m = m[m["label_theme"] != ""]
     pred_dir = np.where(m["partition"].str.lower() == "true", "B", m["direction"].str.replace(r"\.0$", "", regex=True))
@@ -100,19 +112,36 @@ def score() -> pd.DataFrame:
     macro = m["label_theme"].str.upper() != "OTHER"
     m["ok_zone"] = [set(a.upper().split("|")) == set(b.split("|")) if mac else np.nan
                     for a, b, mac in zip(m["label_zone"], m["zones"], macro)]
-    m["ok_direction"] = [str(a).strip().replace("+", "") == str(b) if mac else np.nan
-                         for a, b, mac in zip(m["label_direction"], pred_dir, macro)]
+    lab_dir = m["label_direction"].str.strip().str.replace("+", "", regex=False)
+    m["ok_direction"] = [a == str(b) if mac else np.nan for a, b, mac in zip(lab_dir, pred_dir, macro)]
+    # Sign error: both sides give a sign and they are opposite (the contract enters the index reversed).
+    sign_error = macro & lab_dir.isin(["1", "-1"]) & pd.Series(pred_dir, index=m.index).isin(["1", "-1"]) \
+        & (lab_dir != pd.Series(pred_dir, index=m.index))
     res = pd.DataFrame({
         "n_labelled": [len(m)],
         "theme_accuracy": [m["ok_theme"].mean()],
         "zone_accuracy_macro": [m.loc[macro, "ok_zone"].astype(float).mean()],
         "direction_accuracy_macro": [m.loc[macro, "ok_direction"].astype(float).mean()],
+        "sign_errors_macro": [int(sign_error.sum())],
+        "n_macro": [int(macro.sum())],
     })
     by_theme = m.groupby("label_theme")[["ok_theme"]].mean()
+    return m, res, by_theme
+
+
+def score() -> pd.DataFrame:
+    sheet = load_labels()
+    key = pd.read_csv(OUT / "validation_key.csv", dtype=str).fillna("")
+    m, res, by_theme = _compare(sheet, key)
     res.to_csv(OUT / "validation_scores.csv", index=False)
     by_theme.to_csv(OUT / "validation_scores_by_theme.csv")
     m.to_csv(OUT / "validation_merged.csv", index=False)
-    log.info("validation:\n%s\n%s", res.to_string(index=False), by_theme.to_string())
+    log.info("validation (blind labels):\n%s\n%s", res.to_string(index=False), by_theme.to_string())
+    if (OUT / "validation_adjudication.csv").exists():
+        m_adj, res_adj, _ = _compare(adjudicate(sheet), key)
+        res_adj.to_csv(OUT / "validation_scores_adjudicated.csv", index=False)
+        m_adj.to_csv(OUT / "validation_merged_adjudicated.csv", index=False)
+        log.info("validation (after adjudication):\n%s", res_adj.to_string(index=False))
     return res
 
 

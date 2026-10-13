@@ -22,6 +22,7 @@ paths:
   market_series: "config/market_series.yaml"   # raw-data mapping (free-data runs use config/market_series_free.yaml)
   results: "results"
   figures: "results/figures"
+  site: "deliverables"         # the self-contained HTML page (spec 11.2), built by src/report/build_site.py
 
 sample:
   start: "2024-01-01"

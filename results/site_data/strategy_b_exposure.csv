@@ -1,4 +1,4 @@
-Unnamed: 0,w,w_escalation,shock,w_vix,w_escalation_vix,shock_vix
+date,w,w_escalation,shock,w_vix,w_escalation_vix,shock_vix
 2024-01-01,1.0,1.0,False,0.25,1.0,True
 2024-01-02,1.0,1.0,False,0.325,1.0,False
 2024-01-03,1.0,1.0,False,0.4,1.0,False
